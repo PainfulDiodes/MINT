@@ -81,8 +81,9 @@
         ;
         ; status register bits
         ;---------------------
-        TXE    .EQU   0          ;transmit data register empty
-        RXF    .EQU   1          ;receive data register full
+        ;TXE    .EQU   0          ;transmit data register empty
+        ;RXF    .EQU   1          ;receive data register full
+        ; Using these with bit operations assembles as NOP ???
 
  .endif
 
@@ -349,7 +350,7 @@ TxChar:
         ld    b,a                   ;save the character  for later
 TxChar1: 
         in    a,(USB_STATUS)        ;get the USB status
-        bit   TXE,a                 ;ready to transmit? (active low)
+        bit   0,a                   ;ready to transmit? (active low)
         jr    nz,TxChar1            ;no, bit is high
         ld    a,b                   ;yes, get the character
         out   (USB_DATA),a          ;and send it
@@ -361,7 +362,7 @@ TxChar1:
 RXDATA:
 RxChar:  
         in    a,(USB_STATUS)        ;get the USB status
-        bit   RXF,a                 ;data to read? (active low)
+        bit   1,a                   ;data to read? (active low)
         jr    nz,RxChar             ;no, the buffer is empty
         in    a,(USB_DATA)          ;yes, read the received char
         ret

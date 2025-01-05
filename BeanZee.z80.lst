@@ -113,8 +113,9 @@
 0000                             ; 
 0000                             ; status register bits
 0000                             ;---------------------
-0000                TXE:      EQU   0   ;transmit data register empty
-0000                RXF:      EQU   1   ;receive data register full
+0000                             ;TXE    .EQU   0          ;transmit data register empty
+0000                             ;RXF    .EQU   1          ;receive data register full
+0000                             ; Using these with bit operations assembles as NOP ???
 0000                             ; 
 0000                          ENDIF      
 0000                             ; 
@@ -150,37 +151,37 @@
 0000                          .ORG   ROMSTART   
 0000                             ;reset
 0000                RSTVEC:      
-0000   C3 94 00               JP   RESET   
+0000   C3 96 00               JP   RESET   
 0003                             ; 
 0003                RST1:        
 0008                          .ORG   ROMSTART+$08   
 0008   2E 01                  LD   l,1   
-000A   C3 89 00               JP   ISR   
+000A   C3 8B 00               JP   ISR   
 000D                             ; 
 000D                RST2:        
 0010                          .ORG   ROMSTART+$10   
 0010   2E 02                  LD   l,2   
-0012   C3 89 00               JP   ISR   
+0012   C3 8B 00               JP   ISR   
 0015                             ; 
 0015                RST3:        
 0018                          .ORG   ROMSTART+$18   
 0018   2E 03                  LD   l,3   
-001A   C3 89 00               JP   ISR   
+001A   C3 8B 00               JP   ISR   
 001D                             ; 
 001D                RST4:        
 0020                          .ORG   ROMSTART+$20   
 0020   2E 04                  LD   l,4   
-0022   C3 89 00               JP   ISR   
+0022   C3 8B 00               JP   ISR   
 0025                             ; 
 0025                RST5:        
 0028                          .ORG   ROMSTART+$28   
 0028   2E 05                  LD   l,5   
-002A   C3 89 00               JP   ISR   
+002A   C3 8B 00               JP   ISR   
 002D                             ; 
 002D                RST6:        
 0030                          .ORG   ROMSTART+$30   
 0030   2E 06                  LD   l,6   
-0032   C3 89 00               JP   ISR   
+0032   C3 8B 00               JP   ISR   
 0035                             ; 
 0035                             ;RST 7 Interrupt
 0038                          .ORG   ROMSTART+$38   
@@ -243,7 +244,7 @@
 0066                             ; JP	(HL)
 0066                             ; 
 0066   2E 08                  LD   l,8   
-0068   C3 89 00               JP   ISR   
+0068   C3 8B 00               JP   ISR   
 006B                             ; 
 006B                          IF   TEC_1   
 006B                          IF   BITBANG   
@@ -381,27 +382,27 @@
 006C   47                     LD   b,a   ;save the character  for later
 006D                TXCHAR1:      
 006D   DB 00                  IN   a,(USB_STATUS)   ;get the USB status
-006F   00                     BIT   TXE,a   ;ready to transmit? (active low)
-0070   20 FB                  JR   nz,TxChar1   ;no, bit is high
-0072   78                     LD   a,b   ;yes, get the character
-0073   D3 01                  OUT   (USB_DATA),a   ;and send it
-0075   C1                     POP   bc   
-0076   C9                     RET      
-0077                             ; 
-0077                             ; receive  a character in a
-0077                             ;---------------------------------
-0077                RXDATA:      
-0077                RXCHAR:      
-0077   DB 00                  IN   a,(USB_STATUS)   ;get the USB status
-0079   00                     BIT   RXF,a   ;data to read? (active low)
-007A   20 FB                  JR   nz,RxChar   ;no, the buffer is empty
-007C   DB 01                  IN   a,(USB_DATA)   ;yes, read the received char
-007E   C9                     RET      
-007F                             ; 
-007F                          ENDIF      
-007F                             ; 
-007F                             ; 
-007F                          IF   LOADER   
+006F   CB 47                  BIT   0,a   ;ready to transmit? (active low)
+0071   20 FA                  JR   nz,TxChar1   ;no, bit is high
+0073   78                     LD   a,b   ;yes, get the character
+0074   D3 01                  OUT   (USB_DATA),a   ;and send it
+0076   C1                     POP   bc   
+0077   C9                     RET      
+0078                             ; 
+0078                             ; receive  a character in a
+0078                             ;---------------------------------
+0078                RXDATA:      
+0078                RXCHAR:      
+0078   DB 00                  IN   a,(USB_STATUS)   ;get the USB status
+007A   CB 4F                  BIT   1,a   ;data to read? (active low)
+007C   20 FA                  JR   nz,RxChar   ;no, the buffer is empty
+007E   DB 01                  IN   a,(USB_DATA)   ;yes, read the received char
+0080   C9                     RET      
+0081                             ; 
+0081                          ENDIF      
+0081                             ; 
+0081                             ; 
+0081                          IF   LOADER   
                                  ;   .ORG   ROMSTART + $0700
                                  ;-----------------------
                                  ; RECEIVE INTEL HEX FILE
@@ -500,11 +501,11 @@
                               AND   A   ;CLEAR CARRY
                               POP   BC   
                               RET      
-007F                          ENDIF      
-007F                             ; 
-007F                             ; in this example code just wait for an INTEL Hex file download
-007F                             ;just going to send a char to let you know I'm here
-007F                          IF   LOADER   
+0081                          ENDIF      
+0081                             ; 
+0081                             ; in this example code just wait for an INTEL Hex file download
+0081                             ;just going to send a char to let you know I'm here
+0081                          IF   LOADER   
                                  ; 
                     LOAD:        
                               LD   a,"L"   ; L for load
@@ -514,57 +515,57 @@
                               LD   a,"0"   ;0 is false
                               CALL   TxChar   
                               JR   load   ;if at first you don't succeed...
-007F                          ENDIF      
-007F                             ; 
-007F                GETCHAR:      
-007F   2A 18 82               LD   HL,(GETCVEC)   
-0082   E9                     JP   (HL)   
-0083                             ; 
-0083                PUTCHAR:      
-0083   E5                     PUSH   HL   
-0084   2A 1A 82               LD   HL,(PUTCVEC)   
-0087   E3                     EX   (SP),HL   
-0088   C9                     RET      
-0089                             ; 
-0089                ISR:         
-0089   26 00                  LD   h,0   
-008B   22 92 84               LD   (vIntID),hl   
-008E   CD BD 03               CALL   enter   
-0091   5A 00                  .CSTR   "Z"   
-0093   C9                     RET      
-0094                             ; 
-0094                RESET:       
-0094   31 00 82               LD   SP,stack   
-0097   21 5F 00               LD   HL,IntRet   
-009A   22 06 82               LD   (RST08),HL   
-009D   22 08 82               LD   (RST10),HL   
-00A0   22 0A 82               LD   (RST18),HL   
-00A3   22 0C 82               LD   (RST20),HL   
-00A6   22 0E 82               LD   (RST28),HL   
-00A9   22 10 82               LD   (RST30),HL   
-00AC   22 14 82               LD   (INTVEC),HL   
-00AF   22 16 82               LD   (NMIVEC),HL   
-00B2                             ; 
-00B2   21 77 00               LD   HL,RXDATA   
-00B5   22 18 82               LD   (GETCVEC),HL   
-00B8   21 6B 00               LD   HL,TXDATA   
-00BB   22 1A 82               LD   (PUTCVEC),HL   
-00BE                             ; 
-00BE                          IF   TEC_1   
-00BE                          IF   BITBANG = 0   
+0081                          ENDIF      
+0081                             ; 
+0081                GETCHAR:      
+0081   2A 18 82               LD   HL,(GETCVEC)   
+0084   E9                     JP   (HL)   
+0085                             ; 
+0085                PUTCHAR:      
+0085   E5                     PUSH   HL   
+0086   2A 1A 82               LD   HL,(PUTCVEC)   
+0089   E3                     EX   (SP),HL   
+008A   C9                     RET      
+008B                             ; 
+008B                ISR:         
+008B   26 00                  LD   h,0   
+008D   22 92 84               LD   (vIntID),hl   
+0090   CD BD 03               CALL   enter   
+0093   5A 00                  .CSTR   "Z"   
+0095   C9                     RET      
+0096                             ; 
+0096                RESET:       
+0096   31 00 82               LD   SP,stack   
+0099   21 5F 00               LD   HL,IntRet   
+009C   22 06 82               LD   (RST08),HL   
+009F   22 08 82               LD   (RST10),HL   
+00A2   22 0A 82               LD   (RST18),HL   
+00A5   22 0C 82               LD   (RST20),HL   
+00A8   22 0E 82               LD   (RST28),HL   
+00AB   22 10 82               LD   (RST30),HL   
+00AE   22 14 82               LD   (INTVEC),HL   
+00B1   22 16 82               LD   (NMIVEC),HL   
+00B4                             ; 
+00B4   21 78 00               LD   HL,RXDATA   
+00B7   22 18 82               LD   (GETCVEC),HL   
+00BA   21 6B 00               LD   HL,TXDATA   
+00BD   22 1A 82               LD   (PUTCVEC),HL   
+00C0                             ; 
+00C0                          IF   TEC_1   
+00C0                          IF   BITBANG = 0   
                                  ; 
                               LD   a,MRESET   
                               OUT   (CONTROL),a   ;reset the ACIA
                                  ; 
-00BE                          ENDIF      
-00BE                          ENDIF      
-00BE                             ; 
-00BE   CD 50 00               CALL   PWRUP   
-00C1   ED 56                  IM   1   
-00C3   FB                     EI      
-00C4                             ; 
-00C4                          IF   TEC_1   
-00C4                          IF   BITBANG   
+00C0                          ENDIF      
+00C0                          ENDIF      
+00C0                             ; 
+00C0   CD 50 00               CALL   PWRUP   
+00C3   ED 56                  IM   1   
+00C5   FB                     EI      
+00C6                             ; 
+00C6                          IF   TEC_1   
+00C6                          IF   BITBANG   
                                  ; 
                                  ;inline serial initialisation
                               LD   A,$40   
@@ -573,57 +574,57 @@
                               LD   HL,B4800   
                               LD   (BAUD),HL   
                                  ; 
-00C4                          ELSE      ;6850      
+00C6                          ELSE      ;6850      
                                  ; 
                               LD   a,RTSLID+F8N2+DIV_64   
                               OUT   (CONTROL),a   ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
                                  ; 
-00C4                          ENDIF      
-00C4                          ENDIF      
-00C4                             ; 
-00C4                             ; 
-00C4   C3 18 02               JP   start   ; into #180 of the prog
-00C7                             ; *************************************************************************
-00C7                             ; 
-00C7                             ;       MINT 2.0 Minimal Interpreter for the Z80
-00C7                             ; 
-00C7                             ;       John Hardy and Ken Boak
-00C7                             ;       incorporates bit-bang serial routines by Craig Jones
-00C7                             ; 
-00C7                             ;       GNU GENERAL PUBLIC LICENSE                   Version 3, 29 June 2007
-00C7                             ; 
-00C7                             ;       see the LICENSE file in this repo for more information
-00C7                             ; 
-00C7                             ; *****************************************************************************
-00C7                TRUE:     EQU   -1   
-00C7                FALSE:    EQU   0   
-00C7                UNLIMITED:   EQU   -1   
-00C7                CTRL_C:   EQU   3   
-00C7                CTRL_E:   EQU   5   
-00C7                CTRL_H:   EQU   8   
-00C7                CTRL_L:   EQU   12   
-00C7                CTRL_R:   EQU   18   
-00C7                CTRL_S:   EQU   19   
-00C7                BSLASH:   EQU   $5c   
-00C7                .macro LITDAT,len
-00C7                             ; 
-00C7                 db len
-00C7                .endm
-00C7                 
-00C7                .macro REPDAT,len,data
-00C7                             ; 
-00C7                 db (len | $80)
-00C7                 db data
-00C7                .endm
-00C7                 
-00C7                .macro ENDDAT,
-00C7                             ; 
-00C7                 db 0
-00C7                .endm
-00C7                 
-00C7                             ; **************************************************************************
-00C7                             ; Page 0  Initialisation
-00C7                             ; **************************************************************************		
+00C6                          ENDIF      
+00C6                          ENDIF      
+00C6                             ; 
+00C6                             ; 
+00C6   C3 18 02               JP   start   ; into #180 of the prog
+00C9                             ; *************************************************************************
+00C9                             ; 
+00C9                             ;       MINT 2.0 Minimal Interpreter for the Z80
+00C9                             ; 
+00C9                             ;       John Hardy and Ken Boak
+00C9                             ;       incorporates bit-bang serial routines by Craig Jones
+00C9                             ; 
+00C9                             ;       GNU GENERAL PUBLIC LICENSE                   Version 3, 29 June 2007
+00C9                             ; 
+00C9                             ;       see the LICENSE file in this repo for more information
+00C9                             ; 
+00C9                             ; *****************************************************************************
+00C9                TRUE:     EQU   -1   
+00C9                FALSE:    EQU   0   
+00C9                UNLIMITED:   EQU   -1   
+00C9                CTRL_C:   EQU   3   
+00C9                CTRL_E:   EQU   5   
+00C9                CTRL_H:   EQU   8   
+00C9                CTRL_L:   EQU   12   
+00C9                CTRL_R:   EQU   18   
+00C9                CTRL_S:   EQU   19   
+00C9                BSLASH:   EQU   $5c   
+00C9                .macro LITDAT,len
+00C9                             ; 
+00C9                 db len
+00C9                .endm
+00C9                 
+00C9                .macro REPDAT,len,data
+00C9                             ; 
+00C9                 db (len | $80)
+00C9                 db data
+00C9                .endm
+00C9                 
+00C9                .macro ENDDAT,
+00C9                             ; 
+00C9                 db 0
+00C9                .endm
+00C9                 
+00C9                             ; **************************************************************************
+00C9                             ; Page 0  Initialisation
+00C9                             ; **************************************************************************		
 0180                          .ORG   ROMSTART + $180   ; 0+180 put mint code from here	
 0180                             ; **************************************************************************
 0180                             ; Macros must be written in Mint and end with ;
@@ -753,7 +754,7 @@
 0245   20 F6                  JR   NZ,interpret3   ; if not loop
 0247   C1                     POP   bc   ; restore offset into TIB
 0248                WAITCHAR:      
-0248   CD 7F 00               CALL   getchar   ; loop around waiting for character from serial port
+0248   CD 81 00               CALL   getchar   ; loop around waiting for character from serial port
 024B   FE 20                  CP   $20   ; compare to space
 024D   30 39                  JR   NC,waitchar1   ; if >= space, if below 20 set cary flag
 024F   FE 00                  CP   $0   ; is it end of string? null end of string
@@ -788,7 +789,7 @@
 028B   09                     ADD   hl,bc   
 028C   77                     LD   (hl),A   ; store the character in textbuf
 028D   03                     INC   bc   
-028E   CD 83 00               CALL   putchar   ; echo character to screen
+028E   CD 85 00               CALL   putchar   ; echo character to screen
 0291   CD 5B 03               CALL   nesting   
 0294   18 B2                  JR   waitchar   ; wait for next character
 0296                WAITCHAR3:      
@@ -917,7 +918,7 @@
 0354   27                     DAA      
 0355   CE 40                  ADC   a,0x40   
 0357   27                     DAA      
-0358   C3 83 00               JP   putchar   
+0358   C3 85 00               JP   putchar   
 035B                             ; **************************************************************************
 035B                             ; calculate nesting value
 035B                             ; A is char to be tested,
@@ -971,7 +972,7 @@
 0397   E3                     EX   (SP),hl   ; put it back	
 0398   C9                     RET      
 0399                PUTSTR0:      
-0399   CD 83 00               CALL   putchar   
+0399   CD 85 00               CALL   putchar   
 039C   23                     INC   hl   
 039D                PUTSTR:      
 039D   7E                     LD   a,(hl)   
@@ -994,7 +995,7 @@
 03B8                WRITECHAR:      
 03B8   77                     LD   (hl),A   
 03B9   23                     INC   hl   
-03BA   C3 83 00               JP   putchar   
+03BA   C3 85 00               JP   putchar   
 03BD                ENTER:       
 03BD   60 69                  LD   hl,bc   
 03BF   CD A2 03               CALL   rpush   ; save Instruction Pointer
@@ -1118,7 +1119,7 @@
 0461   CD C9 06               CALL   printDec   
 0464                DOT2:        
 0464   3E 20                  LD   a," "   
-0466   CD 83 00               CALL   putChar   
+0466   CD 85 00               CALL   putChar   
 0469   FD E9                  JP   (iy)   
 046B                COMMA_:      ; print hexadecimal
 046B   E1                     POP   hl   
@@ -1201,7 +1202,7 @@
 04C7   03                     INC   bc   
 04C8   FE 60                  CP   "`"   ; ` is the string terminator
 04CA   28 05                  JR   Z,str2   
-04CC   CD 83 00               CALL   putchar   
+04CC   CD 85 00               CALL   putchar   
 04CF   18 F5                  JR   str1   
 04D1                STR2:        
 04D1   0B                     DEC   bc   
@@ -1452,7 +1453,7 @@
 0634                PRINTCHAR_:      
 0634   E1                     POP   hl   
 0635   7D                     LD   a,L   
-0636   CD 83 00               CALL   putchar   
+0636   CD 85 00               CALL   putchar   
 0639   FD E9                  JP   (iy)   
 063B                ELSE_:       
 063B   2A 9E 84               LD   hl,(vElse)   
@@ -1490,7 +1491,7 @@
 0666                GO3:         
 0666   FD E9                  JP   (iy)   
 0668                KEY_:        
-0668   CD 7F 00               CALL   getchar   
+0668   CD 81 00               CALL   getchar   
 066B   26 00                  LD   H,0   
 066D   6F                     LD   L,A   
 066E   18 CE                  JR   else1   
@@ -1565,7 +1566,7 @@
 06C9   CB 7C                  BIT   7,h   
 06CB   28 0B                  JR   z,printDec2   
 06CD   3E 2D                  LD   a,"-"   
-06CF   CD 83 00               CALL   putchar   
+06CF   CD 85 00               CALL   putchar   
 06D2   AF                     XOR   a   
 06D3   95                     SUB   l   
 06D4   6F                     LD   l,a   
@@ -1606,7 +1607,7 @@
 070C   0C                     INC   c   
 070D                PRINTDEC7:      
 070D   78                     LD   a,b   
-070E   C3 83 00               JP   putchar   
+070E   C3 85 00               JP   putchar   
 0711                             ;*******************************************************************
 0711                             ; Page 5 primitive routines continued
 0711                             ;*******************************************************************
@@ -1855,64 +1856,60 @@ RC2014:             0000 DEFINED AT LINE 2 IN constants.asm
 BEANZEE:            0001 DEFINED AT LINE 3 IN constants.asm
 EXTENDED:           0000 DEFINED AT LINE 5 IN constants.asm
 ROMSTART:           0000 DEFINED AT LINE 40 IN constants.asm
-                    > USED AT LINE 118 IN IOSerial.asm
-                    > USED AT LINE 124 IN IOSerial.asm
-                    > USED AT LINE 129 IN IOSerial.asm
-                    > USED AT LINE 134 IN IOSerial.asm
-                    > USED AT LINE 139 IN IOSerial.asm
-                    > USED AT LINE 144 IN IOSerial.asm
-                    > USED AT LINE 149 IN IOSerial.asm
-                    > USED AT LINE 154 IN IOSerial.asm
-                    > USED AT LINE 166 IN IOSerial.asm
-                    > USED AT LINE 208 IN IOSerial.asm
+                    > USED AT LINE 119 IN IOSerial.asm
+                    > USED AT LINE 125 IN IOSerial.asm
+                    > USED AT LINE 130 IN IOSerial.asm
+                    > USED AT LINE 135 IN IOSerial.asm
+                    > USED AT LINE 140 IN IOSerial.asm
+                    > USED AT LINE 145 IN IOSerial.asm
+                    > USED AT LINE 150 IN IOSerial.asm
+                    > USED AT LINE 155 IN IOSerial.asm
+                    > USED AT LINE 167 IN IOSerial.asm
+                    > USED AT LINE 209 IN IOSerial.asm
                     > USED AT LINE 44 IN MAIN.asm
 RAMSTART:           8000 DEFINED AT LINE 41 IN constants.asm
                     > USED AT LINE 6 IN ram.asm
 LOADER:             0000 DEFINED AT LINE 42 IN constants.asm
 BITBANG:            0000 DEFINED AT LINE 43 IN constants.asm
 USB_STATUS:         0000 DEFINED AT LINE 78 IN IOSerial.asm
-                    > USED AT LINE 351 IN IOSerial.asm
-                    > USED AT LINE 363 IN IOSerial.asm
-USB_DATA:           0001 DEFINED AT LINE 79 IN IOSerial.asm
-                    > USED AT LINE 355 IN IOSerial.asm
-                    > USED AT LINE 366 IN IOSerial.asm
-TXE:                0000 DEFINED AT LINE 84 IN IOSerial.asm
                     > USED AT LINE 352 IN IOSerial.asm
-RXF:                0001 DEFINED AT LINE 85 IN IOSerial.asm
                     > USED AT LINE 364 IN IOSerial.asm
-ESC:                001B DEFINED AT LINE 114 IN IOSerial.asm
-CR:                 000D DEFINED AT LINE 115 IN IOSerial.asm
-LF:                 000A DEFINED AT LINE 116 IN IOSerial.asm
-RSTVEC:             0000 DEFINED AT LINE 120 IN IOSerial.asm
-RST1:               0003 DEFINED AT LINE 123 IN IOSerial.asm
-RST2:               000D DEFINED AT LINE 128 IN IOSerial.asm
-RST3:               0015 DEFINED AT LINE 133 IN IOSerial.asm
-RST4:               001D DEFINED AT LINE 138 IN IOSerial.asm
-RST5:               0025 DEFINED AT LINE 143 IN IOSerial.asm
-RST6:               002D DEFINED AT LINE 148 IN IOSerial.asm
-SEVENSEGMENT:       0040 DEFINED AT LINE 178 IN IOSerial.asm
-PWRUP:              0050 DEFINED AT LINE 193 IN IOSerial.asm
-                    > USED AT LINE 530 IN IOSerial.asm
-BITIME:             0053 DEFINED AT LINE 195 IN IOSerial.asm
-BITIM1:             0058 DEFINED AT LINE 199 IN IOSerial.asm
-                    > USED AT LINE 201 IN IOSerial.asm
-INTRET:             005F DEFINED AT LINE 204 IN IOSerial.asm
-                    > USED AT LINE 506 IN IOSerial.asm
-TXDATA:             006B DEFINED AT LINE 346 IN IOSerial.asm
-                    > USED AT LINE 518 IN IOSerial.asm
-TXCHAR:             006B DEFINED AT LINE 347 IN IOSerial.asm
-TXCHAR1:            006D DEFINED AT LINE 350 IN IOSerial.asm
-                    > USED AT LINE 323 IN IOSerial.asm
-                    > USED AT LINE 353 IN IOSerial.asm
-RXDATA:             0077 DEFINED AT LINE 361 IN IOSerial.asm
-                    > USED AT LINE 516 IN IOSerial.asm
-RXCHAR:             0077 DEFINED AT LINE 362 IN IOSerial.asm
-                    > USED AT LINE 336 IN IOSerial.asm
-                    > USED AT LINE 365 IN IOSerial.asm
-GETCHAR:            007F DEFINED AT LINE 487 IN IOSerial.asm
+USB_DATA:           0001 DEFINED AT LINE 79 IN IOSerial.asm
+                    > USED AT LINE 356 IN IOSerial.asm
+                    > USED AT LINE 367 IN IOSerial.asm
+ESC:                001B DEFINED AT LINE 115 IN IOSerial.asm
+CR:                 000D DEFINED AT LINE 116 IN IOSerial.asm
+LF:                 000A DEFINED AT LINE 117 IN IOSerial.asm
+RSTVEC:             0000 DEFINED AT LINE 121 IN IOSerial.asm
+RST1:               0003 DEFINED AT LINE 124 IN IOSerial.asm
+RST2:               000D DEFINED AT LINE 129 IN IOSerial.asm
+RST3:               0015 DEFINED AT LINE 134 IN IOSerial.asm
+RST4:               001D DEFINED AT LINE 139 IN IOSerial.asm
+RST5:               0025 DEFINED AT LINE 144 IN IOSerial.asm
+RST6:               002D DEFINED AT LINE 149 IN IOSerial.asm
+SEVENSEGMENT:       0040 DEFINED AT LINE 179 IN IOSerial.asm
+PWRUP:              0050 DEFINED AT LINE 194 IN IOSerial.asm
+                    > USED AT LINE 531 IN IOSerial.asm
+BITIME:             0053 DEFINED AT LINE 196 IN IOSerial.asm
+BITIM1:             0058 DEFINED AT LINE 200 IN IOSerial.asm
+                    > USED AT LINE 202 IN IOSerial.asm
+INTRET:             005F DEFINED AT LINE 205 IN IOSerial.asm
+                    > USED AT LINE 507 IN IOSerial.asm
+TXDATA:             006B DEFINED AT LINE 347 IN IOSerial.asm
+                    > USED AT LINE 519 IN IOSerial.asm
+TXCHAR:             006B DEFINED AT LINE 348 IN IOSerial.asm
+TXCHAR1:            006D DEFINED AT LINE 351 IN IOSerial.asm
+                    > USED AT LINE 324 IN IOSerial.asm
+                    > USED AT LINE 354 IN IOSerial.asm
+RXDATA:             0078 DEFINED AT LINE 362 IN IOSerial.asm
+                    > USED AT LINE 517 IN IOSerial.asm
+RXCHAR:             0078 DEFINED AT LINE 363 IN IOSerial.asm
+                    > USED AT LINE 337 IN IOSerial.asm
+                    > USED AT LINE 366 IN IOSerial.asm
+GETCHAR:            0081 DEFINED AT LINE 488 IN IOSerial.asm
                     > USED AT LINE 183 IN MAIN.asm
                     > USED AT LINE 1002 IN MAIN.asm
-PUTCHAR:            0083 DEFINED AT LINE 491 IN IOSerial.asm
+PUTCHAR:            0085 DEFINED AT LINE 492 IN IOSerial.asm
                     > USED AT LINE 220 IN MAIN.asm
                     > USED AT LINE 362 IN MAIN.asm
                     > USED AT LINE 422 IN MAIN.asm
@@ -1922,16 +1919,16 @@ PUTCHAR:            0083 DEFINED AT LINE 491 IN IOSerial.asm
                     > USED AT LINE 958 IN MAIN.asm
                     > USED AT LINE 1086 IN MAIN.asm
                     > USED AT LINE 1127 IN MAIN.asm
-ISR:                0089 DEFINED AT LINE 497 IN IOSerial.asm
-                    > USED AT LINE 126 IN IOSerial.asm
-                    > USED AT LINE 131 IN IOSerial.asm
-                    > USED AT LINE 136 IN IOSerial.asm
-                    > USED AT LINE 141 IN IOSerial.asm
-                    > USED AT LINE 146 IN IOSerial.asm
-                    > USED AT LINE 151 IN IOSerial.asm
-                    > USED AT LINE 214 IN IOSerial.asm
-RESET:              0094 DEFINED AT LINE 504 IN IOSerial.asm
-                    > USED AT LINE 121 IN IOSerial.asm
+ISR:                008B DEFINED AT LINE 498 IN IOSerial.asm
+                    > USED AT LINE 127 IN IOSerial.asm
+                    > USED AT LINE 132 IN IOSerial.asm
+                    > USED AT LINE 137 IN IOSerial.asm
+                    > USED AT LINE 142 IN IOSerial.asm
+                    > USED AT LINE 147 IN IOSerial.asm
+                    > USED AT LINE 152 IN IOSerial.asm
+                    > USED AT LINE 215 IN IOSerial.asm
+RESET:              0096 DEFINED AT LINE 505 IN IOSerial.asm
+                    > USED AT LINE 122 IN IOSerial.asm
 TRUE:               00-1 DEFINED AT LINE 13 IN MAIN.asm
                     > USED AT LINE 478 IN MAIN.asm
 FALSE:              0000 DEFINED AT LINE 14 IN MAIN.asm
@@ -2071,7 +2068,7 @@ WRITECHAR:          03B8 DEFINED AT LINE 445 IN MAIN.asm
                     > USED AT LINE 1065 IN MAIN.asm
                     > USED AT LINE 1071 IN MAIN.asm
 ENTER:              03BD DEFINED AT LINE 450 IN MAIN.asm
-                    > USED AT LINE 500 IN IOSerial.asm
+                    > USED AT LINE 501 IN IOSerial.asm
                     > USED AT LINE 210 IN MAIN.asm
 CARRY:              03C6 DEFINED AT LINE 457 IN MAIN.asm
                     > USED AT LINE 574 IN MAIN.asm
@@ -2351,7 +2348,7 @@ DSTACK:             8200 DEFINED AT LINE 14 IN ram.asm
                     > USED AT LINE 287 IN MAIN.asm
                     > USED AT LINE 947 IN MAIN.asm
 STACK:              8200 DEFINED AT LINE 15 IN ram.asm
-                    > USED AT LINE 505 IN IOSerial.asm
+                    > USED AT LINE 506 IN IOSerial.asm
 TBPTR:              8200 DEFINED AT LINE 16 IN ram.asm
 VTEMP1:             8202 DEFINED AT LINE 17 IN ram.asm
                     > USED AT LINE 833 IN MAIN.asm
@@ -2362,28 +2359,28 @@ VTEMP2:             8204 DEFINED AT LINE 18 IN ram.asm
                     > USED AT LINE 1205 IN MAIN.asm
                     > USED AT LINE 1239 IN MAIN.asm
 RST08:              8206 DEFINED AT LINE 20 IN ram.asm
-                    > USED AT LINE 507 IN IOSerial.asm
-RST10:              8208 DEFINED AT LINE 21 IN ram.asm
                     > USED AT LINE 508 IN IOSerial.asm
-RST18:              820A DEFINED AT LINE 22 IN ram.asm
+RST10:              8208 DEFINED AT LINE 21 IN ram.asm
                     > USED AT LINE 509 IN IOSerial.asm
-RST20:              820C DEFINED AT LINE 23 IN ram.asm
+RST18:              820A DEFINED AT LINE 22 IN ram.asm
                     > USED AT LINE 510 IN IOSerial.asm
-RST28:              820E DEFINED AT LINE 24 IN ram.asm
+RST20:              820C DEFINED AT LINE 23 IN ram.asm
                     > USED AT LINE 511 IN IOSerial.asm
-RST30:              8210 DEFINED AT LINE 25 IN ram.asm
+RST28:              820E DEFINED AT LINE 24 IN ram.asm
                     > USED AT LINE 512 IN IOSerial.asm
+RST30:              8210 DEFINED AT LINE 25 IN ram.asm
+                    > USED AT LINE 513 IN IOSerial.asm
 BAUD:               8212 DEFINED AT LINE 26 IN ram.asm
 INTVEC:             8214 DEFINED AT LINE 27 IN ram.asm
-                    > USED AT LINE 513 IN IOSerial.asm
-NMIVEC:             8216 DEFINED AT LINE 28 IN ram.asm
                     > USED AT LINE 514 IN IOSerial.asm
+NMIVEC:             8216 DEFINED AT LINE 28 IN ram.asm
+                    > USED AT LINE 515 IN IOSerial.asm
 GETCVEC:            8218 DEFINED AT LINE 29 IN ram.asm
-                    > USED AT LINE 488 IN IOSerial.asm
-                    > USED AT LINE 517 IN IOSerial.asm
+                    > USED AT LINE 489 IN IOSerial.asm
+                    > USED AT LINE 518 IN IOSerial.asm
 PUTCVEC:            821A DEFINED AT LINE 30 IN ram.asm
-                    > USED AT LINE 493 IN IOSerial.asm
-                    > USED AT LINE 519 IN IOSerial.asm
+                    > USED AT LINE 494 IN IOSerial.asm
+                    > USED AT LINE 520 IN IOSerial.asm
 OPCODES:            8300 DEFINED AT LINE 33 IN ram.asm
                     > USED AT LINE 296 IN MAIN.asm
 ALTCODES:           835E DEFINED AT LINE 35 IN ram.asm
@@ -2426,7 +2423,7 @@ VREMAIN:            848A DEFINED AT LINE 61 IN ram.asm
 VSTKSTART:          848C DEFINED AT LINE 62 IN ram.asm
                     > USED AT LINE 288 IN MAIN.asm
 VINTID:             8492 DEFINED AT LINE 65 IN ram.asm
-                    > USED AT LINE 499 IN IOSerial.asm
+                    > USED AT LINE 500 IN IOSerial.asm
 VLASTDEF:           849A DEFINED AT LINE 69 IN ram.asm
                     > USED AT LINE 290 IN MAIN.asm
                     > USED AT LINE 1143 IN MAIN.asm
