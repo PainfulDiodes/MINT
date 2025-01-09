@@ -1,3 +1,5 @@
+The MINT minimalist interpreter forked for use with the [BeanZee development board](https://github.com/PainfulDiodes/BeanZee) or [z80-breadboard-computer](https://github.com/PainfulDiodes/z80-breadboard-computer)
+
 # MINT Language 2.0
 
 MINT is a minimalist character-based interpreter but one which aims at fast performance, readability and ease of use. It is written for the Z80 microprocessor and is 2K.
