@@ -75,8 +75,8 @@
         ;
         ; USB registers
         ;----------------------
-        USB_STATUS      .EQU      $00   ;(read)
-        USB_DATA        .EQU      $01   ;(read/write)
+USB_STATUS     .EQU      $00   ;(read)
+USB_DATA       .EQU      $01   ;(read/write)
 
         ;
         ; status register bits
@@ -116,42 +116,50 @@ ESC:     .EQU   1BH
 CR:      .EQU   0DH
 LF:      .EQU   0AH
 
+        PADORG ROMSTART 
         .ORG ROMSTART
 ;reset
 RSTVEC:
         JP	RESET
 
 rst1:
+    	PADORG	ROMSTART+$08
     	.ORG	ROMSTART+$08
     	ld l,1
     	jp ISR
     
 rst2:
+        PADORG ROMSTART+$10
         .ORG ROMSTART+$10
     	ld l,2
     	jp ISR
 
 rst3:
+        PADORG ROMSTART+$18 
         .ORG ROMSTART+$18 
     	ld l,3
     	jp ISR
     
 rst4:
+        PADORG ROMSTART+$20
         .ORG ROMSTART+$20
     	ld l,4
     	jp ISR
 
 rst5:
+    	PADORG ROMSTART+$28
     	.ORG ROMSTART+$28
     	ld l,5
     	jp ISR
 
 rst6:
+    	PADORG ROMSTART+$30
     	.ORG ROMSTART+$30
     	ld l,6
     	jp ISR
 
 ;RST 7 Interrupt
+    	PADORG	ROMSTART+$38
     	.ORG	ROMSTART+$38
 
  .if  BITBANG
@@ -164,6 +172,7 @@ rst6:
 
  .endif
 
+        PADORG  ROMSTART+$40
         .ORG    ROMSTART+$40
 
 ;hexadecimal to 7 segment display code table
@@ -206,7 +215,8 @@ IntRet:
         RET
 
 ;RST 8  Non Maskable Interrupt
-        .ORG ROMSTART+$66
+        PADORG ROMSTART+$66
+        .ORG   ROMSTART+$66
         ; PUSH	HL
         ; LD	HL,(NMIVEC)
         ; JP	(HL)
@@ -499,7 +509,7 @@ ISR:
         ld h,0
     	ld (vIntID),hl
     	call enter
-    	.cstr "Z"
+    	db "Z",0
     	ret
 
 RESET:   

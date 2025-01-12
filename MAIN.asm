@@ -10,24 +10,24 @@
 ;       see the LICENSE file in this repo for more information 
 ;
 ; *****************************************************************************
-    TRUE        EQU -1		
-    FALSE       EQU 0
-    UNLIMITED   EQU -1		
+TRUE        EQU -1		
+FALSE       EQU 0
+UNLIMITED   EQU -1		
 
-    CTRL_C      equ 3
-    CTRL_E      equ 5
-    CTRL_H      equ 8
-    CTRL_L      equ 12
-    CTRL_R      equ 18
-    CTRL_S      equ 19
+CTRL_C      equ 3
+CTRL_E      equ 5
+CTRL_H      equ 8
+CTRL_L      equ 12
+CTRL_R      equ 18
+CTRL_S      equ 19
 
-    BSLASH      equ $5c
+BSLASH      equ $5c
 
-.macro LITDAT,len
+.macro LITDAT len
     db len
 .endm
 
-.macro REPDAT,len,data			; compress the command tables
+.macro REPDAT len,data			; compress the command tables
     
     db (len | $80)
     db data
@@ -41,7 +41,8 @@
 ; Page 0  Initialisation
 ; **************************************************************************		
 
-	.ORG ROMSTART + $180		; 0+180 put mint code from here	
+	PADORG ROMSTART + $180
+    .ORG   ROMSTART + $180		; 0+180 put mint code from here	
 
 ; **************************************************************************
 ; Macros must be written in Mint and end with ; 
@@ -53,90 +54,90 @@ reedit_:
     db "/z/Z;"			; remembers last line edited
 
 edit_:
-    .cstr "`?`/K/P/Z;"
+    db "`?`/K/P/Z;",0
 
 list_:
-    .cstr "/N26(/i65+/Z/k0>(/N))/P;"
+    db "/N26(/i65+/Z/k0>(/N))/P;",0
 
 printStack_:
-    .cstr "`=> `/s2- /D1-(",$22,",2-)'/N/P;"        
+    db "`=> `/s2- /D1-(",$22,",2-)'/N/P;",0        
 
 iOpcodes:
     LITDAT 15
-    db    lsb(bang_)        ;   !            
-    db    lsb(dquote_)      ;   "
-    db    lsb(hash_)        ;   #
-    db    lsb(dollar_)      ;   $            
-    db    lsb(percent_)     ;   %            
-    db    lsb(amper_)       ;   &
-    db    lsb(quote_)       ;   '
-    db    lsb(lparen_)      ;   (        
-    db    lsb(rparen_)      ;   )
-    db    lsb(star_)        ;   *            
-    db    lsb(plus_)        ;   +
-    db    lsb(comma_)       ;   ,            
-    db    lsb(minus_)       ;   -
-    db    lsb(dot_)         ;   .
-    db    lsb(slash_)       ;   /	
+    db    low(bang_)        ;   !            
+    db    low(dquote_)      ;   "
+    db    low(hash_)        ;   #
+    db    low(dollar_)      ;   $            
+    db    low(percent_)     ;   %            
+    db    low(amper_)       ;   &
+    db    low(quote_)       ;   '
+    db    low(lparen_)      ;   (        
+    db    low(rparen_)      ;   )
+    db    low(star_)        ;   *            
+    db    low(plus_)        ;   +
+    db    low(comma_)       ;   ,            
+    db    low(minus_)       ;   -
+    db    low(dot_)         ;   .
+    db    low(slash_)       ;   /	
 
-    REPDAT 10, lsb(num_)	; 10 x repeat lsb of add to the num routine 
+    REPDAT 10, low(num_)	; 10 x repeat lsb of add to the num routine 
 
     LITDAT 7
-    db    lsb(colon_)       ;    :        
-    db    lsb(semi_)        ;    ;
-    db    lsb(lt_)          ;    <
-    db    lsb(eq_)          ;    =            
-    db    lsb(gt_)          ;    >            
-    db    lsb(question_)    ;    ?   
-    db    lsb(at_)          ;    @    
+    db    low(colon_)       ;    :        
+    db    low(semi_)        ;    ;
+    db    low(lt_)          ;    <
+    db    low(eq_)          ;    =            
+    db    low(gt_)          ;    >            
+    db    low(question_)    ;    ?   
+    db    low(at_)          ;    @    
 
-    REPDAT 26, lsb(call_)	; call a command a, B ....Z
+    REPDAT 26, low(call_)	; call a command a, B ....Z
 
     LITDAT 6
-    db    lsb(lbrack_)      ;    [
-    db    lsb(bslash_)      ;    \
-    db    lsb(rbrack_)      ;    ]
-    db    lsb(caret_)       ;    ^
-    db    lsb(underscore_)  ;    _   
-    db    lsb(grave_)       ;    `   ; for printing `hello`        
+    db    low(lbrack_)      ;    [
+    db    low(bslash_)      ;    \
+    db    low(rbrack_)      ;    ]
+    db    low(caret_)       ;    ^
+    db    low(underscore_)  ;    _   
+    db    low(grave_)       ;    `   ; for printing `hello`        
 
-    REPDAT 26, lsb(var_)	; a b c .....z
+    REPDAT 26, low(var_)	; a b c .....z
 
     LITDAT 4
-    db    lsb(lbrace_)      ;    {
-    db    lsb(pipe_)        ;    |            
-    db    lsb(rbrace_)      ;    }            
-    db    lsb(tilde_)       ;    ~ ( a b c -- b c a ) rotate            
+    db    low(lbrace_)      ;    {
+    db    low(pipe_)        ;    |            
+    db    low(rbrace_)      ;    }            
+    db    low(tilde_)       ;    ~ ( a b c -- b c a ) rotate            
 
 iAltCodes:
 
     LITDAT 26
-    db     lsb(alloc_)      ;A      allocate some heap memory
-    db     lsb(aNop_)       ;B        
-    db     lsb(printChar_)  ;C      print a char
-    db     lsb(depth_)      ;D      depth of stack
-    db     lsb(else_)       ;E      else
-    db     lsb(falsex_)     ;F      false condition
-    db     lsb(go_)         ;G      go execute mint code
-    db     lsb(aNop_)       ;H
-    db     lsb(inPort_)     ;I      input from port
-    db     lsb(aNop_)       ;J
-    db     lsb(key_)        ;K      read a char from input
-    db     lsb(aNop_)       ;L      
-    db     lsb(aNop_)       ;M
-    db     lsb(newln_)      ;N      prints a newline to output
-    db     lsb(outPort_)    ;O      output to port
-    db     lsb(prompt_)     ;P      print MINT prompt
-    db     lsb(aNop_)       ;Q
-    db     lsb(aNop_)       ;R
-    db     lsb(arrSize_)    ;S      array size
-    db     lsb(truex_)      ;T      true condition
-    db     lsb(unlimit_)    ;U      unlimited loop
-    db     lsb(varAccess_)  ;V      address of last access
-    db     lsb(while_)      ;W      conditional break from loop
-    db     lsb(exec_)       ;X      execute machine code 
-    db     lsb(aNop_)       ;Y
-    db     lsb(editDef_)    ;Z      edit line
+    db     low(alloc_)      ;A      allocate some heap memory
+    db     low(aNop_)       ;B        
+    db     low(printChar_)  ;C      print a char
+    db     low(depth_)      ;D      depth of stack
+    db     low(else_)       ;E      else
+    db     low(falsex_)     ;F      false condition
+    db     low(go_)         ;G      go execute mint code
+    db     low(aNop_)       ;H
+    db     low(inPort_)     ;I      input from port
+    db     low(aNop_)       ;J
+    db     low(key_)        ;K      read a char from input
+    db     low(aNop_)       ;L      
+    db     low(aNop_)       ;M
+    db     low(newln_)      ;N      prints a newline to output
+    db     low(outPort_)    ;O      output to port
+    db     low(prompt_)     ;P      print MINT prompt
+    db     low(aNop_)       ;Q
+    db     low(aNop_)       ;R
+    db     low(arrSize_)    ;S      array size
+    db     low(truex_)      ;T      true condition
+    db     low(unlimit_)    ;U      unlimited loop
+    db     low(varAccess_)  ;V      address of last access
+    db     low(while_)      ;W      conditional break from loop
+    db     low(exec_)       ;X      execute machine code 
+    db     low(aNop_)       ;Y
+    db     low(editDef_)    ;Z      edit line
     ENDDAT 
 
 backSpace:
@@ -145,14 +146,14 @@ backSpace:
     jr z, interpret2
     dec bc
     call printStr
-    .cstr "\b \b"
+    db "\b \b",0
     jr interpret2
     
 start:
-    ld SP,DSTACK		; start of MINT
+    ld SP,dStack		; start of MINT
     call init		    ; setups
     call printStr		; prog count to stack, put code line 235 on stack then call print
-    .cstr "MINT2.0\r\n"
+    db "MINT2.0\r\n",0
 
 interpret:
     call prompt
@@ -185,30 +186,30 @@ waitchar:
     jr NC,waitchar1		; if >= space, if below 20 set cary flag
     cp $0                   ; is it end of string? null end of string
     jr Z,waitchar4
-    cp '\r'                 ; carriage return? ascii 13
+    cp "\r"                 ; carriage return? ascii 13
     jr Z,waitchar3		; if anything else its macro/control 
     cp CTRL_H
     jr z,backSpace
-    ld d,msb(macros)
+    ld d,high(macros)
     cp CTRL_E
-    ld e,lsb(edit_)
+    ld e,low(edit_)
     jr z,macro
     cp CTRL_R
-    ld e,lsb(reedit_)
+    ld e,low(reedit_)
     jr z,macro
     cp CTRL_L
-    ld e,lsb(list_)
+    ld e,low(list_)
     jr z,macro
     cp CTRL_S
-    ld e,lsb(printStack_)
+    ld e,low(printStack_)
     jr z,macro
     jr interpret2
 
 macro:                          
     ld (vTIBPtr),bc
     push de
-    call ENTER		;mint go operation and jump to it
-    .cstr "/G"
+    call enter		;mint go operation and jump to it
+    db "/G",0
     ld bc,(vTIBPtr)
     jr interpret2
 
@@ -252,9 +253,9 @@ NEXT:
     sub "!"
     jr c,NEXT
     ld L,A                      ; Index into table
-    ld H,msb(opcodes)           ; Start address of jump table         
+    ld H,high(opcodes)           ; Start address of jump table         
     ld L,(hl)                   ; get low jump address
-    ld H,msb(page4)             ; Load H with the 1st page address
+    ld H,high(page4)             ; Load H with the 1st page address
     jp (hl)                     ; Jump to routine
 
 exit:
@@ -266,15 +267,15 @@ exit:
     jp (hl)
 
 etx:                                
-    ld hl,-DSTACK               ; check if stack pointer is underwater
+    ld hl,-dStack               ; check if stack pointer is underwater
     add hl,SP
     jr NC,etx1
-    ld SP,DSTACK
+    ld SP,dStack
 etx1:
     jp interpret
 
 init:                           
-    ld IX,RSTACK
+    ld IX,rStack
     ld IY,NEXT		; IY provides a faster jump to NEXT
 
     ld hl,vars              
@@ -403,12 +404,12 @@ nesting4:
 
 prompt:                            
     call printStr
-    .cstr "\r\n> "
+    db "\r\n> ",0
     ret
 
 crlf:                               
     call printStr
-    .cstr "\r\n"
+    db "\r\n",0
     ret
 
 printStr:                           
@@ -586,7 +587,7 @@ dot_:
     call printDec
 dot2:
     ld a,' '           
-    call putChar
+    call putchar
     jp (iy)
 
 comma_:                          ; print hexadecimal
@@ -860,19 +861,19 @@ loopStart3:
     call rpush                  ; rpush limit
     ld hl,-1                    ; hl = count = -1 
     call rpush                  ; rpush count
-loopstart4:    
+loopStart4:    
     jp (iy)
     
 again:
 loopEnd:    
     ld e,(ix+2)                 ; de = limit
     ld d,(ix+3)
-    ld a,e                      ; a = lsb(limit)
+    ld a,e                      ; a = low(limit)
     or d                        ; if limit 0 exit loop
     jr z,loopEnd4                  
     inc de                      ; is limit -2
     inc de
-    ld a,e                      ; a = lsb(limit)
+    ld a,e                      ; a = low(limit)
     or d                        ; if limit 0 exit loop
     jr z,loopEnd2               ; yes, loop again
     dec de
@@ -944,7 +945,7 @@ depth:
     ld hl,0
     add hl,SP
     EX de,hl
-    ld hl,DSTACK
+    ld hl,dStack
     or A
     sbc hl,de
     jp shr1
