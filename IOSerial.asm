@@ -75,8 +75,8 @@
         ;
         ; USB registers
         ;----------------------
-        USB_STATUS      .EQU      $00   ;(read)
-        USB_DATA        .EQU      $01   ;(read/write)
+USB_STATUS     .EQU      $00   ;(read)
+USB_DATA       .EQU      $01   ;(read/write)
 
         ;
         ; status register bits

@@ -10,18 +10,18 @@
 ;       see the LICENSE file in this repo for more information 
 ;
 ; *****************************************************************************
-    TRUE        EQU -1		
-    FALSE       EQU 0
-    UNLIMITED   EQU -1		
+TRUE        EQU -1		
+FALSE       EQU 0
+UNLIMITED   EQU -1		
 
-    CTRL_C      equ 3
-    CTRL_E      equ 5
-    CTRL_H      equ 8
-    CTRL_L      equ 12
-    CTRL_R      equ 18
-    CTRL_S      equ 19
+CTRL_C      equ 3
+CTRL_E      equ 5
+CTRL_H      equ 8
+CTRL_L      equ 12
+CTRL_R      equ 18
+CTRL_S      equ 19
 
-    BSLASH      equ $5c
+BSLASH      equ $5c
 
 .macro LITDAT len
     db len
