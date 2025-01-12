@@ -1,3 +1,10 @@
+MACRO PADORG addr
+    IF $ < addr
+    BLOCK addr-$
+    ENDIF
+    ORG addr
+ENDM
+
 OUTPUT "BeanZee.z80.bin"
 
 .include "constants.asm"

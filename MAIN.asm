@@ -41,7 +41,8 @@ BSLASH      equ $5c
 ; Page 0  Initialisation
 ; **************************************************************************		
 
-	.ORG ROMSTART + $180		; 0+180 put mint code from here	
+	PADORG ROMSTART + $180
+    .ORG   ROMSTART + $180		; 0+180 put mint code from here	
 
 ; **************************************************************************
 ; Macros must be written in Mint and end with ; 

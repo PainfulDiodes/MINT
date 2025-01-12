@@ -1,7 +1,14 @@
 # file opened: BeanZee.z80
-   1  0000              OUTPUT "BeanZee.z80.bin"
-   2  0000
-   3  0000              .include "constants.asm"
+   1  0000              MACRO PADORG addr
+   2  0000 ~                IF $ < addr
+   3  0000 ~                BLOCK addr-$
+   4  0000 ~                ENDIF
+   5  0000 ~                ORG addr
+   6  0000              ENDM
+   7  0000
+   8  0000              OUTPUT "BeanZee.z80.bin"
+   9  0000
+  10  0000              .include "constants.asm"
 # file opened: constants.asm
    1+ 0000              TEC_1 EQU 0
    2+ 0000              RC2014 EQU 0
@@ -50,7 +57,7 @@
   45+ 0000              .endif
   46+ 0000
 # file closed: constants.asm
-   4  0000              .include "IOSerial.asm"
+  11  0000              .include "IOSerial.asm"
 # file opened: IOSerial.asm
    1+ 0000                      ; ROM code
    2+ 0000                      ; Targets:
@@ -191,447 +198,497 @@
  116+ 0000              CR:      .EQU   0DH
  117+ 0000              LF:      .EQU   0AH
  118+ 0000
- 119+ 0000                      .ORG ROMSTART
- 120+ 0000              ;reset
- 121+ 0000              RSTVEC:
- 122+ 0000 C3 96 00             JP	RESET
- 123+ 0003
- 124+ 0003              rst1:
- 125+ 0003                  	.ORG	ROMSTART+$08
- 126+ 0008 2E 01            	ld l,1
- 127+ 000A C3 8B 00         	jp ISR
- 128+ 000D
- 129+ 000D              rst2:
- 130+ 000D                      .ORG ROMSTART+$10
- 131+ 0010 2E 02            	ld l,2
- 132+ 0012 C3 8B 00         	jp ISR
- 133+ 0015
- 134+ 0015              rst3:
- 135+ 0015                      .ORG ROMSTART+$18
- 136+ 0018 2E 03            	ld l,3
- 137+ 001A C3 8B 00         	jp ISR
- 138+ 001D
- 139+ 001D              rst4:
- 140+ 001D                      .ORG ROMSTART+$20
- 141+ 0020 2E 04            	ld l,4
- 142+ 0022 C3 8B 00         	jp ISR
- 143+ 0025
- 144+ 0025              rst5:
- 145+ 0025                  	.ORG ROMSTART+$28
- 146+ 0028 2E 05            	ld l,5
- 147+ 002A C3 8B 00         	jp ISR
- 148+ 002D
- 149+ 002D              rst6:
- 150+ 002D                  	.ORG ROMSTART+$30
- 151+ 0030 2E 06            	ld l,6
- 152+ 0032 C3 8B 00         	jp ISR
- 153+ 0035
- 154+ 0035              ;RST 7 Interrupt
- 155+ 0035                  	.ORG	ROMSTART+$38
- 156+ 0038
- 157+ 0038               .if  BITBANG
- 158+ 0038 ~
- 159+ 0038 ~                	ld l,7
- 160+ 0038 ~                	jp ISR
- 161+ 0038               .else
- 162+ 0038
- 163+ 0038 C9                   ret
- 164+ 0039
- 165+ 0039               .endif
- 166+ 0039
- 167+ 0039                      .ORG    ROMSTART+$40
- 168+ 0040
- 169+ 0040              ;hexadecimal to 7 segment display code table
- 170+ 0040               .if TEC_1
- 171+ 0040 ~
- 172+ 0040 ~            sevensegment:
- 173+ 0040 ~                        .DB 0EBH,28H,0CDH,0ADH ;0,1,2,3
- 174+ 0040 ~                        .DB 2EH,0A7H,0E7H,29H ;4,5,6,7
- 175+ 0040 ~                        .DB 0EFH,2FH,6FH,0E6H ;8,9,A,B
- 176+ 0040 ~                        .DB 0C3H,0ECH,0C7H,47H ;C,D,E,F
- 177+ 0040               .else ;SC
- 178+ 0040
- 179+ 0040              sevensegment:
- 180+ 0040 3F 06 5B 4F              .DB 3FH,06H,5BH,4FH ;0,1,2,3
- 181+ 0044 66 6D 7D 07              .DB 66H,6DH,7DH,07H ;4,5,6,7
- 182+ 0048 7F 6F 77 7C              .DB 7FH,6FH,77H,7CH ;8,9,A,B
- 183+ 004C 39 5E 79 71              .DB 39H,5EH,79H,71H ;C,D,E,F
- 184+ 0050               .endif
- 185+ 0050
- 186+ 0050
- 187+ 0050              ;---------------
- 188+ 0050              ; BIT TIME DELAY
- 189+ 0050              ;---------------
- 190+ 0050              ;DELAY FOR ONE SERIAL BIT TIME
- 191+ 0050              ;ENTRY : HL = DELAY TIME
- 192+ 0050              ; NO REGISTERS MODIFIED
- 193+ 0050              ;
- 194+ 0050              PWRUP:
- 195+ 0050 21 00 20             LD    hl,$2000
- 196+ 0053              BITIME:
- 197+ 0053 E5                   PUSH  HL
- 198+ 0054 D5                   PUSH  DE
- 199+ 0055 11 01 00             LD    DE,0001H
- 200+ 0058              BITIM1:
- 201+ 0058 ED 52                SBC   HL,DE
- 202+ 005A D2 58 00             JP    NC,BITIM1
- 203+ 005D D1                   POP   DE
- 204+ 005E E1                   POP   HL
- 205+ 005F              IntRet:
- 206+ 005F C9                   RET
- 207+ 0060
- 208+ 0060              ;RST 8  Non Maskable Interrupt
- 209+ 0060                      .ORG ROMSTART+$66
- 210+ 0066                      ; PUSH	HL
- 211+ 0066                      ; LD	HL,(NMIVEC)
- 212+ 0066                      ; JP	(HL)
- 213+ 0066
- 214+ 0066 2E 08            	ld l,8
- 215+ 0068 C3 8B 00         	jp ISR
- 216+ 006B
- 217+ 006B               .if  TEC_1
- 218+ 006B ~             .if  BITBANG
- 219+ 006B ~
- 220+ 006B ~            ;------------------------
- 221+ 006B ~            ; SERIAL TRANSMIT ROUTINE
- 222+ 006B ~            ;------------------------
- 223+ 006B ~            ;TRANSMIT BYTE SERIALLY ON DOUT
- 224+ 006B ~            ;
- 225+ 006B ~            ; ENTRY : A = BYTE TO TRANSMIT
- 226+ 006B ~            ;  EXIT : NO REGISTERS MODIFIED
- 227+ 006B ~            ;
- 228+ 006B ~
- 229+ 006B ~            TxChar:
- 230+ 006B ~            TXDATA:
- 231+ 006B ~                	PUSH	AF
- 232+ 006B ~                	PUSH	BC
- 233+ 006B ~                	PUSH	HL
- 234+ 006B ~                	LD	HL,(BAUD)
- 235+ 006B ~                	LD	C,A
- 236+ 006B ~            ;
- 237+ 006B ~            ; TRANSMIT START BIT
- 238+ 006B ~            ;
- 239+ 006B ~            	XOR	A
- 240+ 006B ~            	OUT	(SCAN),A
- 241+ 006B ~            	CALL	BITIME
- 242+ 006B ~            ;
- 243+ 006B ~            ; TRANSMIT DATA
- 244+ 006B ~            ;
- 245+ 006B ~            	LD	B,08H
- 246+ 006B ~            	RRC	C
- 247+ 006B ~            NXTBIT:
- 248+ 006B ~                RRC	C	;SHIFT BITS TO D6,
- 249+ 006B ~            	LD	A,C	;LSB FIRST AND OUTPUT
- 250+ 006B ~            	AND	40H	;THEM FOR ONE BIT TIME.
- 251+ 006B ~            	OUT	(SCAN),A
- 252+ 006B ~            	CALL	BITIME
- 253+ 006B ~            	DJNZ	NXTBIT
+ 119+ 0000                      PADORG ROMSTART
+ 119+ 0000             >    IF $ < ROMSTART
+ 119+ 0000 ~           >    BLOCK addr-$
+ 119+ 0000             >    ENDIF
+ 119+ 0000             >    ORG ROMSTART
+ 120+ 0000                      .ORG ROMSTART
+ 121+ 0000              ;reset
+ 122+ 0000              RSTVEC:
+ 123+ 0000 C3 96 00             JP	RESET
+ 124+ 0003
+ 125+ 0003              rst1:
+ 126+ 0003                  	PADORG	ROMSTART+$08
+ 126+ 0003             >    IF $ < ROMSTART+$08
+ 126+ 0003 00 00 00... >    BLOCK ROMSTART+$08-$
+ 126+ 0008             >    ENDIF
+ 126+ 0008             >    ORG ROMSTART+$08
+ 127+ 0008                  	.ORG	ROMSTART+$08
+ 128+ 0008 2E 01            	ld l,1
+ 129+ 000A C3 8B 00         	jp ISR
+ 130+ 000D
+ 131+ 000D              rst2:
+ 132+ 000D                      PADORG ROMSTART+$10
+ 132+ 000D             >    IF $ < ROMSTART+$10
+ 132+ 000D 00 00 00    >    BLOCK ROMSTART+$10-$
+ 132+ 0010             >    ENDIF
+ 132+ 0010             >    ORG ROMSTART+$10
+ 133+ 0010                      .ORG ROMSTART+$10
+ 134+ 0010 2E 02            	ld l,2
+ 135+ 0012 C3 8B 00         	jp ISR
+ 136+ 0015
+ 137+ 0015              rst3:
+ 138+ 0015                      PADORG ROMSTART+$18
+ 138+ 0015             >    IF $ < ROMSTART+$18
+ 138+ 0015 00 00 00    >    BLOCK ROMSTART+$18-$
+ 138+ 0018             >    ENDIF
+ 138+ 0018             >    ORG ROMSTART+$18
+ 139+ 0018                      .ORG ROMSTART+$18
+ 140+ 0018 2E 03            	ld l,3
+ 141+ 001A C3 8B 00         	jp ISR
+ 142+ 001D
+ 143+ 001D              rst4:
+ 144+ 001D                      PADORG ROMSTART+$20
+ 144+ 001D             >    IF $ < ROMSTART+$20
+ 144+ 001D 00 00 00    >    BLOCK ROMSTART+$20-$
+ 144+ 0020             >    ENDIF
+ 144+ 0020             >    ORG ROMSTART+$20
+ 145+ 0020                      .ORG ROMSTART+$20
+ 146+ 0020 2E 04            	ld l,4
+ 147+ 0022 C3 8B 00         	jp ISR
+ 148+ 0025
+ 149+ 0025              rst5:
+ 150+ 0025                  	PADORG ROMSTART+$28
+ 150+ 0025             >    IF $ < ROMSTART+$28
+ 150+ 0025 00 00 00    >    BLOCK ROMSTART+$28-$
+ 150+ 0028             >    ENDIF
+ 150+ 0028             >    ORG ROMSTART+$28
+ 151+ 0028                  	.ORG ROMSTART+$28
+ 152+ 0028 2E 05            	ld l,5
+ 153+ 002A C3 8B 00         	jp ISR
+ 154+ 002D
+ 155+ 002D              rst6:
+ 156+ 002D                  	PADORG ROMSTART+$30
+ 156+ 002D             >    IF $ < ROMSTART+$30
+ 156+ 002D 00 00 00    >    BLOCK ROMSTART+$30-$
+ 156+ 0030             >    ENDIF
+ 156+ 0030             >    ORG ROMSTART+$30
+ 157+ 0030                  	.ORG ROMSTART+$30
+ 158+ 0030 2E 06            	ld l,6
+ 159+ 0032 C3 8B 00         	jp ISR
+ 160+ 0035
+ 161+ 0035              ;RST 7 Interrupt
+ 162+ 0035                  	PADORG	ROMSTART+$38
+ 162+ 0035             >    IF $ < ROMSTART+$38
+ 162+ 0035 00 00 00    >    BLOCK ROMSTART+$38-$
+ 162+ 0038             >    ENDIF
+ 162+ 0038             >    ORG ROMSTART+$38
+ 163+ 0038                  	.ORG	ROMSTART+$38
+ 164+ 0038
+ 165+ 0038               .if  BITBANG
+ 166+ 0038 ~
+ 167+ 0038 ~                	ld l,7
+ 168+ 0038 ~                	jp ISR
+ 169+ 0038               .else
+ 170+ 0038
+ 171+ 0038 C9                   ret
+ 172+ 0039
+ 173+ 0039               .endif
+ 174+ 0039
+ 175+ 0039                      PADORG  ROMSTART+$40
+ 175+ 0039             >    IF $ < ROMSTART+$40
+ 175+ 0039 00 00 00... >    BLOCK ROMSTART+$40-$
+ 175+ 0040             >    ENDIF
+ 175+ 0040             >    ORG ROMSTART+$40
+ 176+ 0040                      .ORG    ROMSTART+$40
+ 177+ 0040
+ 178+ 0040              ;hexadecimal to 7 segment display code table
+ 179+ 0040               .if TEC_1
+ 180+ 0040 ~
+ 181+ 0040 ~            sevensegment:
+ 182+ 0040 ~                        .DB 0EBH,28H,0CDH,0ADH ;0,1,2,3
+ 183+ 0040 ~                        .DB 2EH,0A7H,0E7H,29H ;4,5,6,7
+ 184+ 0040 ~                        .DB 0EFH,2FH,6FH,0E6H ;8,9,A,B
+ 185+ 0040 ~                        .DB 0C3H,0ECH,0C7H,47H ;C,D,E,F
+ 186+ 0040               .else ;SC
+ 187+ 0040
+ 188+ 0040              sevensegment:
+ 189+ 0040 3F 06 5B 4F              .DB 3FH,06H,5BH,4FH ;0,1,2,3
+ 190+ 0044 66 6D 7D 07              .DB 66H,6DH,7DH,07H ;4,5,6,7
+ 191+ 0048 7F 6F 77 7C              .DB 7FH,6FH,77H,7CH ;8,9,A,B
+ 192+ 004C 39 5E 79 71              .DB 39H,5EH,79H,71H ;C,D,E,F
+ 193+ 0050               .endif
+ 194+ 0050
+ 195+ 0050
+ 196+ 0050              ;---------------
+ 197+ 0050              ; BIT TIME DELAY
+ 198+ 0050              ;---------------
+ 199+ 0050              ;DELAY FOR ONE SERIAL BIT TIME
+ 200+ 0050              ;ENTRY : HL = DELAY TIME
+ 201+ 0050              ; NO REGISTERS MODIFIED
+ 202+ 0050              ;
+ 203+ 0050              PWRUP:
+ 204+ 0050 21 00 20             LD    hl,$2000
+ 205+ 0053              BITIME:
+ 206+ 0053 E5                   PUSH  HL
+ 207+ 0054 D5                   PUSH  DE
+ 208+ 0055 11 01 00             LD    DE,0001H
+ 209+ 0058              BITIM1:
+ 210+ 0058 ED 52                SBC   HL,DE
+ 211+ 005A D2 58 00             JP    NC,BITIM1
+ 212+ 005D D1                   POP   DE
+ 213+ 005E E1                   POP   HL
+ 214+ 005F              IntRet:
+ 215+ 005F C9                   RET
+ 216+ 0060
+ 217+ 0060              ;RST 8  Non Maskable Interrupt
+ 218+ 0060                      PADORG ROMSTART+$66
+ 218+ 0060             >    IF $ < ROMSTART+$66
+ 218+ 0060 00 00 00... >    BLOCK ROMSTART+$66-$
+ 218+ 0066             >    ENDIF
+ 218+ 0066             >    ORG ROMSTART+$66
+ 219+ 0066                      .ORG   ROMSTART+$66
+ 220+ 0066                      ; PUSH	HL
+ 221+ 0066                      ; LD	HL,(NMIVEC)
+ 222+ 0066                      ; JP	(HL)
+ 223+ 0066
+ 224+ 0066 2E 08            	ld l,8
+ 225+ 0068 C3 8B 00         	jp ISR
+ 226+ 006B
+ 227+ 006B               .if  TEC_1
+ 228+ 006B ~             .if  BITBANG
+ 229+ 006B ~
+ 230+ 006B ~            ;------------------------
+ 231+ 006B ~            ; SERIAL TRANSMIT ROUTINE
+ 232+ 006B ~            ;------------------------
+ 233+ 006B ~            ;TRANSMIT BYTE SERIALLY ON DOUT
+ 234+ 006B ~            ;
+ 235+ 006B ~            ; ENTRY : A = BYTE TO TRANSMIT
+ 236+ 006B ~            ;  EXIT : NO REGISTERS MODIFIED
+ 237+ 006B ~            ;
+ 238+ 006B ~
+ 239+ 006B ~            TxChar:
+ 240+ 006B ~            TXDATA:
+ 241+ 006B ~                	PUSH	AF
+ 242+ 006B ~                	PUSH	BC
+ 243+ 006B ~                	PUSH	HL
+ 244+ 006B ~                	LD	HL,(BAUD)
+ 245+ 006B ~                	LD	C,A
+ 246+ 006B ~            ;
+ 247+ 006B ~            ; TRANSMIT START BIT
+ 248+ 006B ~            ;
+ 249+ 006B ~            	XOR	A
+ 250+ 006B ~            	OUT	(SCAN),A
+ 251+ 006B ~            	CALL	BITIME
+ 252+ 006B ~            ;
+ 253+ 006B ~            ; TRANSMIT DATA
  254+ 006B ~            ;
- 255+ 006B ~            ; SEND STOP BITS
- 256+ 006B ~            ;
- 257+ 006B ~                LD	A,40H
- 258+ 006B ~                OUT	(SCAN),A
- 259+ 006B ~                CALL  BITIME
- 260+ 006B ~                CALL	BITIME
- 261+ 006B ~            	POP	HL
- 262+ 006B ~            	POP	BC
- 263+ 006B ~            	POP	AF
- 264+ 006B ~            	RET
- 265+ 006B ~            ;-----------------------
- 266+ 006B ~            ; SERIAL RECEIVE ROUTINE
- 267+ 006B ~            ;-----------------------
- 268+ 006B ~            ;RECEIVE SERIAL BYTE FROM DIN
- 269+ 006B ~            ;
- 270+ 006B ~            ; ENTRY : NONE
- 271+ 006B ~            ;  EXIT : A= RECEIVED BYTE IF CARRY CLEAR
- 272+ 006B ~            ;
- 273+ 006B ~            ; REGISTERS MODIFIED A AND F
- 274+ 006B ~            ;
- 275+ 006B ~            RxChar:
- 276+ 006B ~            RXDATA:
- 277+ 006B ~            	PUSH	BC
- 278+ 006B ~            	PUSH	HL
+ 255+ 006B ~            	LD	B,08H
+ 256+ 006B ~            	RRC	C
+ 257+ 006B ~            NXTBIT:
+ 258+ 006B ~                RRC	C	;SHIFT BITS TO D6,
+ 259+ 006B ~            	LD	A,C	;LSB FIRST AND OUTPUT
+ 260+ 006B ~            	AND	40H	;THEM FOR ONE BIT TIME.
+ 261+ 006B ~            	OUT	(SCAN),A
+ 262+ 006B ~            	CALL	BITIME
+ 263+ 006B ~            	DJNZ	NXTBIT
+ 264+ 006B ~            ;
+ 265+ 006B ~            ; SEND STOP BITS
+ 266+ 006B ~            ;
+ 267+ 006B ~                LD	A,40H
+ 268+ 006B ~                OUT	(SCAN),A
+ 269+ 006B ~                CALL  BITIME
+ 270+ 006B ~                CALL	BITIME
+ 271+ 006B ~            	POP	HL
+ 272+ 006B ~            	POP	BC
+ 273+ 006B ~            	POP	AF
+ 274+ 006B ~            	RET
+ 275+ 006B ~            ;-----------------------
+ 276+ 006B ~            ; SERIAL RECEIVE ROUTINE
+ 277+ 006B ~            ;-----------------------
+ 278+ 006B ~            ;RECEIVE SERIAL BYTE FROM DIN
  279+ 006B ~            ;
- 280+ 006B ~            ; WAIT FOR START BIT
- 281+ 006B ~            ;
- 282+ 006B ~            RXDAT1: IN	A,(KEYBUF)
- 283+ 006B ~            	    BIT	7,A
- 284+ 006B ~            	    JR	NZ,RXDAT1	;NO START BIT
- 285+ 006B ~            ;
- 286+ 006B ~            ; DETECTED START BIT
- 287+ 006B ~            ;
- 288+ 006B ~            	LD	HL,(BAUD)
- 289+ 006B ~            	SRL	H
- 290+ 006B ~            	RR	L 	;DELAY FOR HALF BIT TIME
- 291+ 006B ~            	CALL 	BITIME
- 292+ 006B ~            	IN	A,(KEYBUF)
- 293+ 006B ~            	BIT	7,A
- 294+ 006B ~            	JR	NZ,RXDAT1	;START BIT NOT VALID
+ 280+ 006B ~            ; ENTRY : NONE
+ 281+ 006B ~            ;  EXIT : A= RECEIVED BYTE IF CARRY CLEAR
+ 282+ 006B ~            ;
+ 283+ 006B ~            ; REGISTERS MODIFIED A AND F
+ 284+ 006B ~            ;
+ 285+ 006B ~            RxChar:
+ 286+ 006B ~            RXDATA:
+ 287+ 006B ~            	PUSH	BC
+ 288+ 006B ~            	PUSH	HL
+ 289+ 006B ~            ;
+ 290+ 006B ~            ; WAIT FOR START BIT
+ 291+ 006B ~            ;
+ 292+ 006B ~            RXDAT1: IN	A,(KEYBUF)
+ 293+ 006B ~            	    BIT	7,A
+ 294+ 006B ~            	    JR	NZ,RXDAT1	;NO START BIT
  295+ 006B ~            ;
- 296+ 006B ~            ; DETECTED VALID START BIT,READ IN DATA
+ 296+ 006B ~            ; DETECTED START BIT
  297+ 006B ~            ;
- 298+ 006B ~            	LD	B,08H
- 299+ 006B ~            RXDAT2:
- 300+ 006B ~                LD	HL,(BAUD)
- 301+ 006B ~            	CALL	BITIME	;DELAY ONE BIT TIME
+ 298+ 006B ~            	LD	HL,(BAUD)
+ 299+ 006B ~            	SRL	H
+ 300+ 006B ~            	RR	L 	;DELAY FOR HALF BIT TIME
+ 301+ 006B ~            	CALL 	BITIME
  302+ 006B ~            	IN	A,(KEYBUF)
- 303+ 006B ~            	RL	A
- 304+ 006B ~            	RR	C	;SHIFT BIT INTO DATA REG
- 305+ 006B ~            	DJNZ	RXDAT2
- 306+ 006B ~            	LD	A,C
- 307+ 006B ~            	OR	A	;CLEAR CARRY FLAG
- 308+ 006B ~                POP	HL
- 309+ 006B ~                POP	BC
- 310+ 006B ~            	RET
- 311+ 006B ~
- 312+ 006B ~             .else ;6850
- 313+ 006B ~            ;
- 314+ 006B ~            ; transmit a character in a
- 315+ 006B ~            ;--------------------------
- 316+ 006B ~            TXDATA:
- 317+ 006B ~            TxChar:
- 318+ 006B ~                    push  bc
- 319+ 006B ~                    ld    b,a                   ;save the character  for later
- 320+ 006B ~            TxChar1:
- 321+ 006B ~                    in    a,(STATUS)            ;get the ACIA status
- 322+ 006B ~                    bit   1,a
- 323+ 006B ~            ;        bit   TDRE,a                ;is the TDRE bit high?
- 324+ 006B ~                    jr    z,TxChar1             ;no, the TDR is not empty
- 325+ 006B ~                    ld    a,b                   ;yes, get the character
- 326+ 006B ~                    out   (TDR),a               ;and put it in the TDR
- 327+ 006B ~                    pop   bc
- 328+ 006B ~                    ret
- 329+ 006B ~            ;
- 330+ 006B ~            ; receive  a character in a
- 331+ 006B ~            ;---------------------------------
- 332+ 006B ~            RXDATA:
- 333+ 006B ~            RxChar:
- 334+ 006B ~                    in    a,(STATUS)         ;get the ACIA status
- 335+ 006B ~                    bit   0,a
- 336+ 006B ~            ;        bit   RDRF,a             ;is the RDRF bit high?
- 337+ 006B ~                    jr    z,RxChar           ;no, the RDR is empty
- 338+ 006B ~                    in    a,(RDR)            ;yes, read the received char
- 339+ 006B ~                    ret
- 340+ 006B ~             .endif
- 341+ 006B               .endif
- 342+ 006B
- 343+ 006B               .if BEANZEE
- 344+ 006B              ;
- 345+ 006B              ; transmit a character in a
- 346+ 006B              ;--------------------------
- 347+ 006B              TXDATA:
- 348+ 006B              TxChar:
- 349+ 006B C5                   push  bc
- 350+ 006C 47                   ld    b,a                   ;save the character  for later
- 351+ 006D              TxChar1:
- 352+ 006D DB 00                in    a,(USB_STATUS)        ;get the USB status
- 353+ 006F CB 47                bit   0,a                   ;ready to transmit? (active low)
- 354+ 0071 20 FA                jr    nz,TxChar1            ;no, bit is high
- 355+ 0073 78                   ld    a,b                   ;yes, get the character
- 356+ 0074 D3 01                out   (USB_DATA),a          ;and send it
- 357+ 0076 C1                   pop   bc
- 358+ 0077 C9                   ret
- 359+ 0078              ;
- 360+ 0078              ; receive  a character in a
- 361+ 0078              ;---------------------------------
- 362+ 0078              RXDATA:
- 363+ 0078              RxChar:
- 364+ 0078 DB 00                in    a,(USB_STATUS)        ;get the USB status
- 365+ 007A CB 4F                bit   1,a                   ;data to read? (active low)
- 366+ 007C 20 FA                jr    nz,RxChar             ;no, the buffer is empty
- 367+ 007E DB 01                in    a,(USB_DATA)          ;yes, read the received char
- 368+ 0080 C9                   ret
- 369+ 0081
- 370+ 0081               .endif
- 371+ 0081
- 372+ 0081
- 373+ 0081               .if LOADER
- 374+ 0081 ~                ;   .ORG   ROMSTART + $0700
- 375+ 0081 ~            ;-----------------------
- 376+ 0081 ~            ; RECEIVE INTEL HEX FILE
- 377+ 0081 ~            ;-----------------------
- 378+ 0081 ~            INTELH:
- 379+ 0081 ~                LD	IX,BUF
- 380+ 0081 ~            ;
- 381+ 0081 ~            ; WAIT FOR RECORD MARK
- 382+ 0081 ~            ;
- 383+ 0081 ~            INTEL1:
- 384+ 0081 ~                XOR	A
- 385+ 0081 ~            	LD	(IX+3),A	;CLEAR CHECKSUM
- 386+ 0081 ~            	CALL	RXDATA	;WAIT FOR THE RECORD MARK
- 387+ 0081 ~            	CP	':'	;TO BE TRANSMITTED
- 388+ 0081 ~            	JR	NZ,INTEL1	;NOT RECORD MARK
- 389+ 0081 ~            ;
- 390+ 0081 ~            ; GET RECORD LENGTH
- 391+ 0081 ~            ;
- 392+ 0081 ~            	CALL	GETBYT
- 393+ 0081 ~            	LD	(IX+0),A	;NUMBER OF DATA BYTES
- 394+ 0081 ~            ;
- 395+ 0081 ~            ; GET ADDRESS FIELD
- 396+ 0081 ~            ;
- 397+ 0081 ~            	CALL	GETBYT
- 398+ 0081 ~            	LD	(IX+2),A	;LOAD ADDRESS HIGH BYTE
- 399+ 0081 ~            	CALL	GETBYT
- 400+ 0081 ~            	LD	(IX+1),A	;LOAD ADDRESS LOW BYTE
+ 303+ 006B ~            	BIT	7,A
+ 304+ 006B ~            	JR	NZ,RXDAT1	;START BIT NOT VALID
+ 305+ 006B ~            ;
+ 306+ 006B ~            ; DETECTED VALID START BIT,READ IN DATA
+ 307+ 006B ~            ;
+ 308+ 006B ~            	LD	B,08H
+ 309+ 006B ~            RXDAT2:
+ 310+ 006B ~                LD	HL,(BAUD)
+ 311+ 006B ~            	CALL	BITIME	;DELAY ONE BIT TIME
+ 312+ 006B ~            	IN	A,(KEYBUF)
+ 313+ 006B ~            	RL	A
+ 314+ 006B ~            	RR	C	;SHIFT BIT INTO DATA REG
+ 315+ 006B ~            	DJNZ	RXDAT2
+ 316+ 006B ~            	LD	A,C
+ 317+ 006B ~            	OR	A	;CLEAR CARRY FLAG
+ 318+ 006B ~                POP	HL
+ 319+ 006B ~                POP	BC
+ 320+ 006B ~            	RET
+ 321+ 006B ~
+ 322+ 006B ~             .else ;6850
+ 323+ 006B ~            ;
+ 324+ 006B ~            ; transmit a character in a
+ 325+ 006B ~            ;--------------------------
+ 326+ 006B ~            TXDATA:
+ 327+ 006B ~            TxChar:
+ 328+ 006B ~                    push  bc
+ 329+ 006B ~                    ld    b,a                   ;save the character  for later
+ 330+ 006B ~            TxChar1:
+ 331+ 006B ~                    in    a,(STATUS)            ;get the ACIA status
+ 332+ 006B ~                    bit   1,a
+ 333+ 006B ~            ;        bit   TDRE,a                ;is the TDRE bit high?
+ 334+ 006B ~                    jr    z,TxChar1             ;no, the TDR is not empty
+ 335+ 006B ~                    ld    a,b                   ;yes, get the character
+ 336+ 006B ~                    out   (TDR),a               ;and put it in the TDR
+ 337+ 006B ~                    pop   bc
+ 338+ 006B ~                    ret
+ 339+ 006B ~            ;
+ 340+ 006B ~            ; receive  a character in a
+ 341+ 006B ~            ;---------------------------------
+ 342+ 006B ~            RXDATA:
+ 343+ 006B ~            RxChar:
+ 344+ 006B ~                    in    a,(STATUS)         ;get the ACIA status
+ 345+ 006B ~                    bit   0,a
+ 346+ 006B ~            ;        bit   RDRF,a             ;is the RDRF bit high?
+ 347+ 006B ~                    jr    z,RxChar           ;no, the RDR is empty
+ 348+ 006B ~                    in    a,(RDR)            ;yes, read the received char
+ 349+ 006B ~                    ret
+ 350+ 006B ~             .endif
+ 351+ 006B               .endif
+ 352+ 006B
+ 353+ 006B               .if BEANZEE
+ 354+ 006B              ;
+ 355+ 006B              ; transmit a character in a
+ 356+ 006B              ;--------------------------
+ 357+ 006B              TXDATA:
+ 358+ 006B              TxChar:
+ 359+ 006B C5                   push  bc
+ 360+ 006C 47                   ld    b,a                   ;save the character  for later
+ 361+ 006D              TxChar1:
+ 362+ 006D DB 00                in    a,(USB_STATUS)        ;get the USB status
+ 363+ 006F CB 47                bit   0,a                   ;ready to transmit? (active low)
+ 364+ 0071 20 FA                jr    nz,TxChar1            ;no, bit is high
+ 365+ 0073 78                   ld    a,b                   ;yes, get the character
+ 366+ 0074 D3 01                out   (USB_DATA),a          ;and send it
+ 367+ 0076 C1                   pop   bc
+ 368+ 0077 C9                   ret
+ 369+ 0078              ;
+ 370+ 0078              ; receive  a character in a
+ 371+ 0078              ;---------------------------------
+ 372+ 0078              RXDATA:
+ 373+ 0078              RxChar:
+ 374+ 0078 DB 00                in    a,(USB_STATUS)        ;get the USB status
+ 375+ 007A CB 4F                bit   1,a                   ;data to read? (active low)
+ 376+ 007C 20 FA                jr    nz,RxChar             ;no, the buffer is empty
+ 377+ 007E DB 01                in    a,(USB_DATA)          ;yes, read the received char
+ 378+ 0080 C9                   ret
+ 379+ 0081
+ 380+ 0081               .endif
+ 381+ 0081
+ 382+ 0081
+ 383+ 0081               .if LOADER
+ 384+ 0081 ~                ;   .ORG   ROMSTART + $0700
+ 385+ 0081 ~            ;-----------------------
+ 386+ 0081 ~            ; RECEIVE INTEL HEX FILE
+ 387+ 0081 ~            ;-----------------------
+ 388+ 0081 ~            INTELH:
+ 389+ 0081 ~                LD	IX,BUF
+ 390+ 0081 ~            ;
+ 391+ 0081 ~            ; WAIT FOR RECORD MARK
+ 392+ 0081 ~            ;
+ 393+ 0081 ~            INTEL1:
+ 394+ 0081 ~                XOR	A
+ 395+ 0081 ~            	LD	(IX+3),A	;CLEAR CHECKSUM
+ 396+ 0081 ~            	CALL	RXDATA	;WAIT FOR THE RECORD MARK
+ 397+ 0081 ~            	CP	':'	;TO BE TRANSMITTED
+ 398+ 0081 ~            	JR	NZ,INTEL1	;NOT RECORD MARK
+ 399+ 0081 ~            ;
+ 400+ 0081 ~            ; GET RECORD LENGTH
  401+ 0081 ~            ;
- 402+ 0081 ~            ; GET RECORD TYPE
- 403+ 0081 ~            ;
- 404+ 0081 ~            	CALL	GETBYT
- 405+ 0081 ~            	JR	NZ,INTEL4	;END OF FILE RECORD
+ 402+ 0081 ~            	CALL	GETBYT
+ 403+ 0081 ~            	LD	(IX+0),A	;NUMBER OF DATA BYTES
+ 404+ 0081 ~            ;
+ 405+ 0081 ~            ; GET ADDRESS FIELD
  406+ 0081 ~            ;
- 407+ 0081 ~            ; READ IN THE DATA
- 408+ 0081 ~            ;
- 409+ 0081 ~            	LD	B,(IX+0)	;NUMBER OF DATA BYTES
- 410+ 0081 ~            	LD	H,(IX+2)	;LOAD ADDRESS HIGH BYTE
- 411+ 0081 ~            	LD	L,(IX+1)	;LOAD ADDRESS LOW BYTE
- 412+ 0081 ~
- 413+ 0081 ~            INTEL2:
- 414+ 0081 ~                CALL	GETBYT	;GET DATA BYTE
- 415+ 0081 ~            	LD	(HL),A	;STORE DATA BYTE
- 416+ 0081 ~            	INC	HL
- 417+ 0081 ~            	DJNZ	INTEL2	;LOAD MORE BYTES
+ 407+ 0081 ~            	CALL	GETBYT
+ 408+ 0081 ~            	LD	(IX+2),A	;LOAD ADDRESS HIGH BYTE
+ 409+ 0081 ~            	CALL	GETBYT
+ 410+ 0081 ~            	LD	(IX+1),A	;LOAD ADDRESS LOW BYTE
+ 411+ 0081 ~            ;
+ 412+ 0081 ~            ; GET RECORD TYPE
+ 413+ 0081 ~            ;
+ 414+ 0081 ~            	CALL	GETBYT
+ 415+ 0081 ~            	JR	NZ,INTEL4	;END OF FILE RECORD
+ 416+ 0081 ~            ;
+ 417+ 0081 ~            ; READ IN THE DATA
  418+ 0081 ~            ;
- 419+ 0081 ~            ; GET CHECKSUM AND COMPARE
- 420+ 0081 ~            ;
- 421+ 0081 ~            	LD	A,(IX+3)	;CONVERT CHECKSUM TO
- 422+ 0081 ~            	NEG		;TWO'S COMPLEMENT
- 423+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
- 424+ 0081 ~            	CALL	GETBYT
- 425+ 0081 ~            	LD	(IX+3),A	;SAVE RECORD CHECKSUM
- 426+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
- 427+ 0081 ~            	JR	Z,INTEL1	;CHECKSUM OK,NEXT RECORD
- 428+ 0081 ~                RET             ;NZ=CHECKSUM ERROR
- 429+ 0081 ~            ;
- 430+ 0081 ~            ; END OF FILE RECORD
- 431+ 0081 ~            ;
- 432+ 0081 ~            INTEL4:
- 433+ 0081 ~                LD	A,(IX+3)	;CONVERT CHECKSUM TO
- 434+ 0081 ~            	NEG		;TWO'S COMPLEMENT
- 435+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
- 436+ 0081 ~            	CALL	GETBYT
- 437+ 0081 ~            	LD	(IX+3),A	;SAVE EOF CHECKSUM
- 438+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
- 439+ 0081 ~            	RET  	    ;NZ=CHECKSUM ERROR
- 440+ 0081 ~            ;--------------------------
- 441+ 0081 ~            ; GET BYTE FROM SERIAL PORT
- 442+ 0081 ~            ;--------------------------
- 443+ 0081 ~            GETBYT:
- 444+ 0081 ~                PUSH	BC
- 445+ 0081 ~            	CALL	RXDATA
- 446+ 0081 ~            	BIT	6,A
- 447+ 0081 ~            	JR	Z,GETBT1
- 448+ 0081 ~            	ADD	A,09H
- 449+ 0081 ~            GETBT1:
- 450+ 0081 ~                AND	0FH
- 451+ 0081 ~            	SLA 	A
- 452+ 0081 ~            	SLA	A
- 453+ 0081 ~            	SLA	A
- 454+ 0081 ~            	SLA	A
- 455+ 0081 ~            	LD	C,A
- 456+ 0081 ~            ;
- 457+ 0081 ~            ; GET LOW NYBBLE
- 458+ 0081 ~            ;
- 459+ 0081 ~            	CALL	RXDATA
- 460+ 0081 ~            	BIT	6,A
- 461+ 0081 ~            	JR	Z,GETBT2
- 462+ 0081 ~            	ADD	A,09H
- 463+ 0081 ~            GETBT2	AND	0FH
- 464+ 0081 ~            	OR	C
- 465+ 0081 ~            	LD	B,A
- 466+ 0081 ~            	ADD	A,(IX+3)
- 467+ 0081 ~            	LD	(IX+3),A	;ADD TO CHECKSUM
- 468+ 0081 ~            	LD	A,B
- 469+ 0081 ~            	AND	A	;CLEAR CARRY
- 470+ 0081 ~                POP	BC
- 471+ 0081 ~            	RET
- 472+ 0081               .endif
- 473+ 0081
- 474+ 0081              ; in this example code just wait for an INTEL Hex file download
- 475+ 0081              ;just going to send a char to let you know I'm here
- 476+ 0081               .if LOADER
- 477+ 0081 ~
- 478+ 0081 ~            Load:
- 479+ 0081 ~                    ld     a,'L'  ; L for load
- 480+ 0081 ~                    call   TxChar
- 481+ 0081 ~                    call INTELH
- 482+ 0081 ~                    jp   z,RAMSTART          ;assume the downloaded code starts here
- 483+ 0081 ~                    ld   a,'0'   ;0 is false
- 484+ 0081 ~                    call TxChar
- 485+ 0081 ~                    jr   load    ;if at first you don't succeed...
- 486+ 0081               .endif
- 487+ 0081
- 488+ 0081              getchar:
- 489+ 0081 2A 18 82             LD HL,(GETCVEC)
- 490+ 0084 E9                   JP (HL)
- 491+ 0085
- 492+ 0085              putchar:
- 493+ 0085 E5                   PUSH HL
- 494+ 0086 2A 1A 82             LD HL,(PUTCVEC)
- 495+ 0089 E3                   EX (SP),HL
- 496+ 008A C9                   RET
- 497+ 008B
- 498+ 008B              ISR:
- 499+ 008B 26 00                ld h,0
- 500+ 008D 22 92 84         	ld (vIntID),hl
- 501+ 0090 CD BD 03         	call enter
- 502+ 0093 5A 00            	db "Z",0
- 503+ 0095 C9               	ret
- 504+ 0096
- 505+ 0096              RESET:
- 506+ 0096 31 00 82             ld SP,stack
- 507+ 0099 21 5F 00             LD HL,IntRet
- 508+ 009C 22 06 82         	LD (RST08),HL
- 509+ 009F 22 08 82         	LD (RST10),HL
- 510+ 00A2 22 0A 82         	LD (RST18),HL
- 511+ 00A5 22 0C 82         	LD (RST20),HL
- 512+ 00A8 22 0E 82         	LD (RST28),HL
- 513+ 00AB 22 10 82         	LD (RST30),HL
- 514+ 00AE 22 14 82             LD (INTVEC),HL
- 515+ 00B1 22 16 82             LD (NMIVEC),HL
- 516+ 00B4
- 517+ 00B4 21 78 00             LD HL,RXDATA
- 518+ 00B7 22 18 82             LD (GETCVEC),HL
- 519+ 00BA 21 6B 00             LD HL,TXDATA
- 520+ 00BD 22 1A 82             LD (PUTCVEC),HL
- 521+ 00C0
- 522+ 00C0               .if TEC_1
- 523+ 00C0 ~             .if BITBANG = 0
- 524+ 00C0 ~
- 525+ 00C0 ~                    ld    a,MRESET
- 526+ 00C0 ~                    out   (CONTROL),a           ;reset the ACIA
- 527+ 00C0 ~
- 528+ 00C0 ~             .endif
- 529+ 00C0               .endif
- 530+ 00C0
- 531+ 00C0 CD 50 00             call PWRUP
- 532+ 00C3 ED 56                IM  1
- 533+ 00C5 FB                   EI
- 534+ 00C6
- 535+ 00C6               .if TEC_1
- 536+ 00C6 ~             .if BITBANG
- 537+ 00C6 ~
- 538+ 00C6 ~            ;inline serial initialisation
- 539+ 00C6 ~                    LD    A,$40
- 540+ 00C6 ~                    LD    C,SCAN
- 541+ 00C6 ~                    OUT   (C),A
- 542+ 00C6 ~                    LD    HL,B4800
- 543+ 00C6 ~                    LD    (BAUD),HL
- 544+ 00C6 ~
- 545+ 00C6 ~             .else ;6850
- 546+ 00C6 ~
- 547+ 00C6 ~                    ld     a,RTSLID+F8N2+DIV_64
- 548+ 00C6 ~                    out   (CONTROL),a           ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
- 549+ 00C6 ~
- 550+ 00C6 ~             .endif
- 551+ 00C6               .endif
- 552+ 00C6
- 553+ 00C6
- 554+ 00C6
+ 419+ 0081 ~            	LD	B,(IX+0)	;NUMBER OF DATA BYTES
+ 420+ 0081 ~            	LD	H,(IX+2)	;LOAD ADDRESS HIGH BYTE
+ 421+ 0081 ~            	LD	L,(IX+1)	;LOAD ADDRESS LOW BYTE
+ 422+ 0081 ~
+ 423+ 0081 ~            INTEL2:
+ 424+ 0081 ~                CALL	GETBYT	;GET DATA BYTE
+ 425+ 0081 ~            	LD	(HL),A	;STORE DATA BYTE
+ 426+ 0081 ~            	INC	HL
+ 427+ 0081 ~            	DJNZ	INTEL2	;LOAD MORE BYTES
+ 428+ 0081 ~            ;
+ 429+ 0081 ~            ; GET CHECKSUM AND COMPARE
+ 430+ 0081 ~            ;
+ 431+ 0081 ~            	LD	A,(IX+3)	;CONVERT CHECKSUM TO
+ 432+ 0081 ~            	NEG		;TWO'S COMPLEMENT
+ 433+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
+ 434+ 0081 ~            	CALL	GETBYT
+ 435+ 0081 ~            	LD	(IX+3),A	;SAVE RECORD CHECKSUM
+ 436+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
+ 437+ 0081 ~            	JR	Z,INTEL1	;CHECKSUM OK,NEXT RECORD
+ 438+ 0081 ~                RET             ;NZ=CHECKSUM ERROR
+ 439+ 0081 ~            ;
+ 440+ 0081 ~            ; END OF FILE RECORD
+ 441+ 0081 ~            ;
+ 442+ 0081 ~            INTEL4:
+ 443+ 0081 ~                LD	A,(IX+3)	;CONVERT CHECKSUM TO
+ 444+ 0081 ~            	NEG		;TWO'S COMPLEMENT
+ 445+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
+ 446+ 0081 ~            	CALL	GETBYT
+ 447+ 0081 ~            	LD	(IX+3),A	;SAVE EOF CHECKSUM
+ 448+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
+ 449+ 0081 ~            	RET  	    ;NZ=CHECKSUM ERROR
+ 450+ 0081 ~            ;--------------------------
+ 451+ 0081 ~            ; GET BYTE FROM SERIAL PORT
+ 452+ 0081 ~            ;--------------------------
+ 453+ 0081 ~            GETBYT:
+ 454+ 0081 ~                PUSH	BC
+ 455+ 0081 ~            	CALL	RXDATA
+ 456+ 0081 ~            	BIT	6,A
+ 457+ 0081 ~            	JR	Z,GETBT1
+ 458+ 0081 ~            	ADD	A,09H
+ 459+ 0081 ~            GETBT1:
+ 460+ 0081 ~                AND	0FH
+ 461+ 0081 ~            	SLA 	A
+ 462+ 0081 ~            	SLA	A
+ 463+ 0081 ~            	SLA	A
+ 464+ 0081 ~            	SLA	A
+ 465+ 0081 ~            	LD	C,A
+ 466+ 0081 ~            ;
+ 467+ 0081 ~            ; GET LOW NYBBLE
+ 468+ 0081 ~            ;
+ 469+ 0081 ~            	CALL	RXDATA
+ 470+ 0081 ~            	BIT	6,A
+ 471+ 0081 ~            	JR	Z,GETBT2
+ 472+ 0081 ~            	ADD	A,09H
+ 473+ 0081 ~            GETBT2	AND	0FH
+ 474+ 0081 ~            	OR	C
+ 475+ 0081 ~            	LD	B,A
+ 476+ 0081 ~            	ADD	A,(IX+3)
+ 477+ 0081 ~            	LD	(IX+3),A	;ADD TO CHECKSUM
+ 478+ 0081 ~            	LD	A,B
+ 479+ 0081 ~            	AND	A	;CLEAR CARRY
+ 480+ 0081 ~                POP	BC
+ 481+ 0081 ~            	RET
+ 482+ 0081               .endif
+ 483+ 0081
+ 484+ 0081              ; in this example code just wait for an INTEL Hex file download
+ 485+ 0081              ;just going to send a char to let you know I'm here
+ 486+ 0081               .if LOADER
+ 487+ 0081 ~
+ 488+ 0081 ~            Load:
+ 489+ 0081 ~                    ld     a,'L'  ; L for load
+ 490+ 0081 ~                    call   TxChar
+ 491+ 0081 ~                    call INTELH
+ 492+ 0081 ~                    jp   z,RAMSTART          ;assume the downloaded code starts here
+ 493+ 0081 ~                    ld   a,'0'   ;0 is false
+ 494+ 0081 ~                    call TxChar
+ 495+ 0081 ~                    jr   load    ;if at first you don't succeed...
+ 496+ 0081               .endif
+ 497+ 0081
+ 498+ 0081              getchar:
+ 499+ 0081 2A 18 82             LD HL,(GETCVEC)
+ 500+ 0084 E9                   JP (HL)
+ 501+ 0085
+ 502+ 0085              putchar:
+ 503+ 0085 E5                   PUSH HL
+ 504+ 0086 2A 1A 82             LD HL,(PUTCVEC)
+ 505+ 0089 E3                   EX (SP),HL
+ 506+ 008A C9                   RET
+ 507+ 008B
+ 508+ 008B              ISR:
+ 509+ 008B 26 00                ld h,0
+ 510+ 008D 22 92 84         	ld (vIntID),hl
+ 511+ 0090 CD BD 03         	call enter
+ 512+ 0093 5A 00            	db "Z",0
+ 513+ 0095 C9               	ret
+ 514+ 0096
+ 515+ 0096              RESET:
+ 516+ 0096 31 00 82             ld SP,stack
+ 517+ 0099 21 5F 00             LD HL,IntRet
+ 518+ 009C 22 06 82         	LD (RST08),HL
+ 519+ 009F 22 08 82         	LD (RST10),HL
+ 520+ 00A2 22 0A 82         	LD (RST18),HL
+ 521+ 00A5 22 0C 82         	LD (RST20),HL
+ 522+ 00A8 22 0E 82         	LD (RST28),HL
+ 523+ 00AB 22 10 82         	LD (RST30),HL
+ 524+ 00AE 22 14 82             LD (INTVEC),HL
+ 525+ 00B1 22 16 82             LD (NMIVEC),HL
+ 526+ 00B4
+ 527+ 00B4 21 78 00             LD HL,RXDATA
+ 528+ 00B7 22 18 82             LD (GETCVEC),HL
+ 529+ 00BA 21 6B 00             LD HL,TXDATA
+ 530+ 00BD 22 1A 82             LD (PUTCVEC),HL
+ 531+ 00C0
+ 532+ 00C0               .if TEC_1
+ 533+ 00C0 ~             .if BITBANG = 0
+ 534+ 00C0 ~
+ 535+ 00C0 ~                    ld    a,MRESET
+ 536+ 00C0 ~                    out   (CONTROL),a           ;reset the ACIA
+ 537+ 00C0 ~
+ 538+ 00C0 ~             .endif
+ 539+ 00C0               .endif
+ 540+ 00C0
+ 541+ 00C0 CD 50 00             call PWRUP
+ 542+ 00C3 ED 56                IM  1
+ 543+ 00C5 FB                   EI
+ 544+ 00C6
+ 545+ 00C6               .if TEC_1
+ 546+ 00C6 ~             .if BITBANG
+ 547+ 00C6 ~
+ 548+ 00C6 ~            ;inline serial initialisation
+ 549+ 00C6 ~                    LD    A,$40
+ 550+ 00C6 ~                    LD    C,SCAN
+ 551+ 00C6 ~                    OUT   (C),A
+ 552+ 00C6 ~                    LD    HL,B4800
+ 553+ 00C6 ~                    LD    (BAUD),HL
+ 554+ 00C6 ~
+ 555+ 00C6 ~             .else ;6850
+ 556+ 00C6 ~
+ 557+ 00C6 ~                    ld     a,RTSLID+F8N2+DIV_64
+ 558+ 00C6 ~                    out   (CONTROL),a           ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
+ 559+ 00C6 ~
+ 560+ 00C6 ~             .endif
+ 561+ 00C6               .endif
+ 562+ 00C6
+ 563+ 00C6
+ 564+ 00C6
 # file closed: IOSerial.asm
-   5  00C6
-   6  00C6 C3 18 02         jp   start              ; into #180 of the prog
-   7  00C9
-   8  00C9              .include "MAIN.asm"
+  12  00C6
+  13  00C6 C3 18 02         jp   start              ; into #180 of the prog
+  14  00C9
+  15  00C9              .include "MAIN.asm"
 # file opened: MAIN.asm
    1+ 00C9              ; *************************************************************************
    2+ 00C9              ;
@@ -676,1310 +733,1315 @@
   41+ 00C9              ; Page 0  Initialisation
   42+ 00C9              ; **************************************************************************
   43+ 00C9
-  44+ 00C9              	.ORG ROMSTART + $180		; 0+180 put mint code from here
-  45+ 0180
-  46+ 0180              ; **************************************************************************
-  47+ 0180              ; Macros must be written in Mint and end with ;
-  48+ 0180              ; this code must not span pages
-  49+ 0180              ; **************************************************************************
-  50+ 0180              macros:
-  51+ 0180
-  52+ 0180              reedit_:
-  53+ 0180 2F 7A 2F 5A      db "/z/Z;"			; remembers last line edited
-  53+ 0184 3B
-  54+ 0185
-  55+ 0185              edit_:
-  56+ 0185 60 3F 60 2F      db "`?`/K/P/Z;",0
-  56+ 0189 4B 2F 50 2F
-  56+ 018D 5A 3B 00
-  57+ 0190
-  58+ 0190              list_:
-  59+ 0190 2F 4E 32 36      db "/N26(/i65+/Z/k0>(/N))/P;",0
-  59+ 0194 28 2F 69 36
-  59+ 0198 35 2B 2F 5A
-  59+ 019C 2F 6B 30 3E
-  59+ 01A0 28 2F 4E 29
-  59+ 01A4 29 2F 50 3B
-  59+ 01A8 00
-  60+ 01A9
-  61+ 01A9              printStack_:
-  62+ 01A9 60 3D 3E 20      db "`=> `/s2- /D1-(",$22,",2-)'/N/P;",0
-  62+ 01AD 60 2F 73 32
-  62+ 01B1 2D 20 2F 44
-  62+ 01B5 31 2D 28 22
-  62+ 01B9 2C 32 2D 29
-  62+ 01BD 27 2F 4E 2F
-  62+ 01C1 50 3B 00
-  63+ 01C4
-  64+ 01C4              iOpcodes:
-  65+ 01C4                  LITDAT 15
-  65+ 01C4 0F          >    db 15
-  66+ 01C5 1D               db    low(bang_)        ;   !
-  67+ 01C6 71               db    low(dquote_)      ;   "
-  68+ 01C7 EE               db    low(hash_)        ;   #
-  69+ 01C8 92               db    low(dollar_)      ;   $
-  70+ 01C9 79               db    low(percent_)     ;   %
-  71+ 01CA 2D               db    low(amper_)       ;   &
-  72+ 01CB 00               db    low(quote_)       ;   '
-  73+ 01CC E9               db    low(lparen_)      ;   (
-  74+ 01CD E0               db    low(rparen_)      ;   )
-  75+ 01CE F0               db    low(star_)        ;   *
-  76+ 01CF 4F               db    low(plus_)        ;   +
-  77+ 01D0 6B               db    low(comma_)       ;   ,
-  78+ 01D1 96               db    low(minus_)       ;   -
-  79+ 01D2 60               db    low(dot_)         ;   .
-  80+ 01D3 F2               db    low(slash_)       ;   /
-  81+ 01D4
-  82+ 01D4                  REPDAT 10, low(num_)	; 10 x repeat lsb of add to the num routine
-  82+ 01D4             >
-  82+ 01D4 8A          >    db (10 | $80)
-  82+ 01D5 DD          >    db low(num_)
-  83+ 01D6
-  84+ 01D6                  LITDAT 7
-  84+ 01D6 07          >    db 7
-  85+ 01D7 E6               db    low(colon_)       ;    :
-  86+ 01D8 80               db    low(semi_)        ;    ;
-  87+ 01D9 BA               db    low(lt_)          ;    <
-  88+ 01DA AB               db    low(eq_)          ;    =
-  89+ 01DB B6               db    low(gt_)          ;    >
-  90+ 01DC EC               db    low(question_)    ;    ?
-  91+ 01DD 01               db    low(at_)          ;    @
-  92+ 01DE
-  93+ 01DE                  REPDAT 26, low(call_)	; call a command a, B ....Z
-  93+ 01DE             >
-  93+ 01DE 9A          >    db (26 | $80)
-  93+ 01DF 56          >    db low(call_)
-  94+ 01E0
-  95+ 01E0                  LITDAT 6
-  95+ 01E0 06          >    db 6
-  96+ 01E1 D4               db    low(lbrack_)      ;    [
-  97+ 01E2 03               db    low(bslash_)      ;    \
-  98+ 01E3 E3               db    low(rbrack_)      ;    ]
-  99+ 01E4 41               db    low(caret_)       ;    ^
- 100+ 01E5 01               db    low(underscore_)  ;    _
- 101+ 01E6 C5               db    low(grave_)       ;    `   ; for printing `hello`
- 102+ 01E7
- 103+ 01E7                  REPDAT 26, low(var_)	; a b c .....z
- 103+ 01E7             >
- 103+ 01E7 9A          >    db (26 | $80)
- 103+ 01E8 05          >    db low(var_)
- 104+ 01E9
- 105+ 01E9                  LITDAT 4
- 105+ 01E9 04          >    db 4
- 106+ 01EA 87               db    low(lbrace_)      ;    {
- 107+ 01EB 38               db    low(pipe_)        ;    |
- 108+ 01EC 8B               db    low(rbrace_)      ;    }
- 109+ 01ED 4A               db    low(tilde_)       ;    ~ ( a b c -- b c a ) rotate
- 110+ 01EE
- 111+ 01EE              iAltCodes:
- 112+ 01EE
- 113+ 01EE                  LITDAT 26
- 113+ 01EE 1A          >    db 26
- 114+ 01EF 00               db     low(alloc_)      ;A      allocate some heap memory
- 115+ 01F0 09               db     low(aNop_)       ;B
- 116+ 01F1 34               db     low(printChar_)  ;C      print a char
- 117+ 01F2 23               db     low(depth_)      ;D      depth of stack
- 118+ 01F3 3B               db     low(else_)       ;E      else
- 119+ 01F4 31               db     low(falsex_)     ;F      false condition
- 120+ 01F5 53               db     low(go_)         ;G      go execute mint code
- 121+ 01F6 09               db     low(aNop_)       ;H
- 122+ 01F7 70               db     low(inPort_)     ;I      input from port
- 123+ 01F8 09               db     low(aNop_)       ;J
- 124+ 01F9 68               db     low(key_)        ;K      read a char from input
- 125+ 01FA 09               db     low(aNop_)       ;L
- 126+ 01FB 09               db     low(aNop_)       ;M
- 127+ 01FC 7A               db     low(newln_)      ;N      prints a newline to output
- 128+ 01FD 7F               db     low(outPort_)    ;O      output to port
- 129+ 01FE 4E               db     low(prompt_)     ;P      print MINT prompt
- 130+ 01FF 09               db     low(aNop_)       ;Q
- 131+ 0200 09               db     low(aNop_)       ;R
- 132+ 0201 0B               db     low(arrSize_)    ;S      array size
- 133+ 0202 88               db     low(truex_)      ;T      true condition
- 134+ 0203 8B               db     low(unlimit_)    ;U      unlimited loop
- 135+ 0204 90               db     low(varAccess_)  ;V      address of last access
- 136+ 0205 13               db     low(while_)      ;W      conditional break from loop
- 137+ 0206 41               db     low(exec_)       ;X      execute machine code
- 138+ 0207 09               db     low(aNop_)       ;Y
- 139+ 0208 49               db     low(editDef_)    ;Z      edit line
- 140+ 0209                  ENDDAT
- 140+ 0209 00          >    db 0
- 141+ 020A
- 142+ 020A              backSpace:
- 143+ 020A 79               ld a,c
- 144+ 020B B0               or b
- 145+ 020C 28 27            jr z, interpret2
- 146+ 020E 0B               dec bc
- 147+ 020F CD 92 03         call printStr
- 148+ 0212 08 20 08 00      db "\b \b",0
- 149+ 0216 18 1D            jr interpret2
- 150+ 0218
- 151+ 0218              start:
- 152+ 0218 31 00 82         ld SP,dStack		; start of MINT
- 153+ 021B CD DE 02         call init		    ; setups
- 154+ 021E CD 92 03         call printStr		; prog count to stack, put code line 235 on stack then call print
- 155+ 0221 4D 49 4E 54      db "MINT2.0\r\n",0
- 155+ 0225 32 2E 30 0D
- 155+ 0229 0A 00
- 156+ 022B
- 157+ 022B              interpret:
- 158+ 022B CD 82 03         call prompt
- 159+ 022E
- 160+ 022E 01 00 00         ld bc,0                 ; load bc with offset into TIB, decide char into tib or execute or control
- 161+ 0231 ED 43 7C 84      ld (vTIBPtr),bc
- 162+ 0235
- 163+ 0235              interpret2:                     ; calc nesting (a macro might have changed it)
- 164+ 0235 1E 00            ld E,0                  ; initilize nesting value
- 165+ 0237 C5               push bc                 ; save offset into TIB,
- 166+ 0238                                          ; bc is also the count of chars in TIB
- 167+ 0238 21 00 80         ld hl,TIB               ; hl is start of TIB
- 168+ 023B 18 06            jr interpret4
- 169+ 023D
- 170+ 023D              interpret3:
- 171+ 023D 7E               ld a,(hl)               ; A = char in TIB
- 172+ 023E 23               inc hl                  ; inc pointer into TIB
- 173+ 023F 0B               dec bc                  ; dec count of chars in TIB
- 174+ 0240 CD 5B 03         call nesting            ; update nesting value
- 175+ 0243
- 176+ 0243              interpret4:
- 177+ 0243 79               ld a,C                  ; is count zero?
- 178+ 0244 B0               or B
- 179+ 0245 20 F6            jr NZ, interpret3       ; if not loop
- 180+ 0247 C1               pop bc                  ; restore offset into TIB
- 181+ 0248
- 182+ 0248              waitchar:
- 183+ 0248 CD 81 00         call getchar            ; loop around waiting for character from serial port
- 184+ 024B FE 20            cp $20			; compare to space
- 185+ 024D 30 39            jr NC,waitchar1		; if >= space, if below 20 set cary flag
- 186+ 024F FE 00            cp $0                   ; is it end of string? null end of string
- 187+ 0251 28 59            jr Z,waitchar4
- 188+ 0253 FE 0D            cp "\r"                 ; carriage return? ascii 13
- 189+ 0255 28 3F            jr Z,waitchar3		; if anything else its macro/control
- 190+ 0257 FE 08            cp CTRL_H
- 191+ 0259 28 AF            jr z,backSpace
- 192+ 025B 16 01            ld d,high(macros)
- 193+ 025D FE 05            cp CTRL_E
- 194+ 025F 1E 85            ld e,low(edit_)
- 195+ 0261 28 14            jr z,macro
- 196+ 0263 FE 12            cp CTRL_R
- 197+ 0265 1E 80            ld e,low(reedit_)
- 198+ 0267 28 0E            jr z,macro
- 199+ 0269 FE 0C            cp CTRL_L
- 200+ 026B 1E 90            ld e,low(list_)
- 201+ 026D 28 08            jr z,macro
- 202+ 026F FE 13            cp CTRL_S
- 203+ 0271 1E A9            ld e,low(printStack_)
- 204+ 0273 28 02            jr z,macro
- 205+ 0275 18 BE            jr interpret2
- 206+ 0277
- 207+ 0277              macro:
- 208+ 0277 ED 43 7C 84      ld (vTIBPtr),bc
- 209+ 027B D5               push de
- 210+ 027C CD BD 03         call enter		;mint go operation and jump to it
- 211+ 027F 2F 47 00         db "/G",0
- 212+ 0282 ED 4B 7C 84      ld bc,(vTIBPtr)
- 213+ 0286 18 AD            jr interpret2
- 214+ 0288
- 215+ 0288              waitchar1:
- 216+ 0288 21 00 80         ld hl,TIB
- 217+ 028B 09               add hl,bc
- 218+ 028C 77               ld (hl),A               ; store the character in textbuf
- 219+ 028D 03               inc bc
- 220+ 028E CD 85 00         call putchar            ; echo character to screen
- 221+ 0291 CD 5B 03         call nesting
- 222+ 0294 18 B2            jr  waitchar            ; wait for next character
- 223+ 0296
- 224+ 0296              waitchar3:
- 225+ 0296 21 00 80         ld hl,TIB
- 226+ 0299 09               add hl,bc
- 227+ 029A 36 0D            ld (hl),"\r"            ; store the crlf in textbuf
- 228+ 029C 23               inc hl
- 229+ 029D 36 0A            ld (hl),"\n"
- 230+ 029F 23               inc hl                  ; ????
- 231+ 02A0 03               inc bc
- 232+ 02A1 03               inc bc
- 233+ 02A2 CD 8B 03         call crlf               ; echo character to screen
- 234+ 02A5 7B               ld a,E                  ; if zero nesting append and ETX after \r
- 235+ 02A6 B7               or A
- 236+ 02A7 20 9F            jr NZ,waitchar
- 237+ 02A9 36 03            ld (hl),$03             ; store end of text ETX in text buffer
- 238+ 02AB 03               inc bc
- 239+ 02AC
- 240+ 02AC              waitchar4:
- 241+ 02AC ED 43 7C 84      ld (vTIBPtr),bc
- 242+ 02B0 01 00 80         ld bc,TIB               ; Instructions stored on heap at address HERE, we pressed enter
- 243+ 02B3 0B               dec bc
- 244+ 02B4
- 245+ 02B4              NEXT:
- 246+ 02B4 03               inc bc                      ; Increment the IP
- 247+ 02B5 0A               ld a,(bc)                   ; Get the next character and dispatch
- 248+ 02B6 B7               or a                        ; is it NUL?
- 249+ 02B7 28 0F            jr z,exit
- 250+ 02B9 FE 03            cp CTRL_C
- 251+ 02BB 28 15            jr z,etx
- 252+ 02BD D6 21            sub "!"
- 253+ 02BF 38 F3            jr c,NEXT
- 254+ 02C1 6F               ld L,A                      ; Index into table
- 255+ 02C2 26 83            ld H,high(opcodes)           ; Start address of jump table
- 256+ 02C4 6E               ld L,(hl)                   ; get low jump address
- 257+ 02C5 26 04            ld H,high(page4)             ; Load H with the 1st page address
- 258+ 02C7 E9               jp (hl)                     ; Jump to routine
- 259+ 02C8
- 260+ 02C8              exit:
- 261+ 02C8 03               inc bc			; store offests into a table of bytes, smaller
- 262+ 02C9 50 59            ld de,bc
- 263+ 02CB CD AD 03         call rpop               ; Restore Instruction pointer
- 264+ 02CE 44 4D            ld bc,hl
- 265+ 02D0 EB               EX de,hl
- 266+ 02D1 E9               jp (hl)
- 267+ 02D2
- 268+ 02D2              etx:
- 269+ 02D2 21 00 7E         ld hl,-dStack               ; check if stack pointer is underwater
- 270+ 02D5 39               add hl,SP
- 271+ 02D6 30 03            jr NC,etx1
- 272+ 02D8 31 00 82         ld SP,dStack
- 273+ 02DB              etx1:
- 274+ 02DB C3 2B 02         jp interpret
- 275+ 02DE
- 276+ 02DE              init:
- 277+ 02DE DD 21 80 81      ld IX,rStack
- 278+ 02E2 FD 21 B4 02      ld IY,NEXT		; IY provides a faster jump to NEXT
- 279+ 02E6
- 280+ 02E6 21 00 84         ld hl,vars
- 281+ 02E9 54 5D            ld de,hl
- 282+ 02EB 13               inc de
- 283+ 02EC 36 00            ld (hl),0
- 284+ 02EE 01 9C 00         ld bc,VARS_SIZE * 3         ; init vars, defs and altVars
- 285+ 02F1 ED B0            LDIR
- 286+ 02F3
- 287+ 02F3 21 00 82         ld hl,dStack
- 288+ 02F6 22 8C 84         ld (vStkStart),hl
- 289+ 02F9 21 41 00         ld hl,65
- 290+ 02FC 22 9A 84         ld (vLastDef),hl
- 291+ 02FF 21 A0 84         ld hl,HEAP
- 292+ 0302 22 76 84         ld (vHeapPtr),hl
- 293+ 0305
- 294+ 0305              initOps:
- 295+ 0305 21 C4 01         ld hl, iOpcodes
- 296+ 0308 11 00 83         ld de, opcodes
- 297+ 030B 01 78 00         ld bc, $80-32-1-1+26
- 298+ 030E
- 299+ 030E              initOps1:
- 300+ 030E 7E               ld a,(hl)
- 301+ 030F 23               inc hl
- 302+ 0310 CB 27            SLA A
- 303+ 0312 C8               ret Z
- 304+ 0313 38 09            jr C, initOps2
- 305+ 0315 CB 3F            SRL A
- 306+ 0317 4F               ld C,A
- 307+ 0318 06 00            ld B,0
- 308+ 031A ED B0            LDIR
- 309+ 031C 18 F0            jr initOps1
- 310+ 031E
- 311+ 031E              initOps2:
- 312+ 031E CB 3F            SRL A
- 313+ 0320 47               ld B,A
- 314+ 0321 7E               ld a,(hl)
- 315+ 0322 23               inc hl
- 316+ 0323              initOps2a:
- 317+ 0323 12               ld (de),A
- 318+ 0324 13               inc de
- 319+ 0325 10 FC            DJNZ initOps2a
- 320+ 0327 18 E5            jr initOps1
- 321+ 0329
- 322+ 0329              lookupRef0:
- 323+ 0329 21 34 84         ld hl,defs
- 324+ 032C D6 41            sub "A"
- 325+ 032E 18 02            jr lookupRef1
- 326+ 0330              lookupRef:
- 327+ 0330 D6 61            sub "a"
- 328+ 0332              lookupRef1:
- 329+ 0332 87               add a,a
- 330+ 0333 85               add a,l
- 331+ 0334 6F               ld l,a
- 332+ 0335 3E 00            ld a,0
- 333+ 0337 8C               ADC a,h
- 334+ 0338 67               ld h,a
- 335+ 0339 AF               XOR a
- 336+ 033A B3               or e                        ; sets Z flag if A-Z
- 337+ 033B C9               ret
- 338+ 033C
- 339+ 033C              printhex:
- 340+ 033C                                              ; Display hl as a 16-bit number in hex.
- 341+ 033C C5               push bc                     ; preserve the IP
- 342+ 033D 7C               ld a,H
- 343+ 033E CD 47 03         call printhex2
- 344+ 0341 7D               ld a,L
- 345+ 0342 CD 47 03         call printhex2
- 346+ 0345 C1               pop bc
- 347+ 0346 C9               ret
- 348+ 0347              printhex2:
- 349+ 0347 4F               ld	C,A
- 350+ 0348 1F           	RRA
- 351+ 0349 1F           	RRA
- 352+ 034A 1F           	RRA
- 353+ 034B 1F           	RRA
- 354+ 034C CD 50 03         call printhex3
- 355+ 034F 79               ld a,C
- 356+ 0350              printhex3:
- 357+ 0350 E6 0F            and	0x0F
- 358+ 0352 C6 90        	add	a,0x90
- 359+ 0354 27           	DAA
- 360+ 0355 CE 40        	ADC	a,0x40
- 361+ 0357 27           	DAA
- 362+ 0358 C3 85 00     	jp putchar
- 363+ 035B
- 364+ 035B              ; **************************************************************************
- 365+ 035B              ; calculate nesting value
- 366+ 035B              ; A is char to be tested,
- 367+ 035B              ; E is the nesting value (initially 0)
- 368+ 035B              ; E is increased by ( and [
- 369+ 035B              ; E is decreased by ) and ]
- 370+ 035B              ; E has its bit 7 toggled by `
- 371+ 035B              ; limited to 127 levels
- 372+ 035B              ; **************************************************************************
- 373+ 035B
- 374+ 035B              nesting:
- 375+ 035B FE 60            cp '`'
- 376+ 035D 20 05            jr NZ,nesting1
- 377+ 035F 3E 80            ld a,$80
- 378+ 0361 AB               xor e
- 379+ 0362 5F               ld e,a
- 380+ 0363 C9               ret
- 381+ 0364              nesting1:
- 382+ 0364 CB 7B            BIT 7,E
- 383+ 0366 C0               ret NZ
- 384+ 0367 FE 3A            cp ':'
- 385+ 0369 28 08            jr Z,nesting2
- 386+ 036B FE 5B            cp '['
- 387+ 036D 28 04            jr Z,nesting2
- 388+ 036F FE 28            cp '('
- 389+ 0371 20 02            jr NZ,nesting3
- 390+ 0373              nesting2:
- 391+ 0373 1C               inc E
- 392+ 0374 C9               ret
- 393+ 0375              nesting3:
- 394+ 0375 FE 3B            cp ';'
- 395+ 0377 28 07            jr Z,nesting4
- 396+ 0379 FE 5D            cp ']'
- 397+ 037B 28 03            jr Z,nesting4
- 398+ 037D FE 29            cp ')'
- 399+ 037F C0               ret NZ
- 400+ 0380              nesting4:
- 401+ 0380 1D               dec E
- 402+ 0381 C9               ret
- 403+ 0382
- 404+ 0382              prompt:
- 405+ 0382 CD 92 03         call printStr
- 406+ 0385 0D 0A 3E 20      db "\r\n> ",0
- 406+ 0389 00
- 407+ 038A C9               ret
- 408+ 038B
- 409+ 038B              crlf:
- 410+ 038B CD 92 03         call printStr
- 411+ 038E 0D 0A 00         db "\r\n",0
- 412+ 0391 C9               ret
- 413+ 0392
- 414+ 0392              printStr:
- 415+ 0392 E3               EX (SP),hl		                ; swap
- 416+ 0393 CD 9D 03         call putStr
- 417+ 0396 23               inc hl			                ; inc past null
- 418+ 0397 E3               EX (SP),hl		                ; put it back
- 419+ 0398 C9               ret
- 420+ 0399
- 421+ 0399              putStr0:
- 422+ 0399 CD 85 00         call putchar
- 423+ 039C 23               inc hl
- 424+ 039D              putStr:
- 425+ 039D 7E               ld a,(hl)
- 426+ 039E B7               or A
- 427+ 039F 20 F8            jr NZ,putStr0
- 428+ 03A1 C9               ret
- 429+ 03A2
- 430+ 03A2              rpush:
- 431+ 03A2 DD 2B            dec IX
- 432+ 03A4 DD 74 00         ld (IX+0),H
- 433+ 03A7 DD 2B            dec IX
- 434+ 03A9 DD 75 00         ld (IX+0),L
- 435+ 03AC C9               ret
- 436+ 03AD
- 437+ 03AD              rpop:
- 438+ 03AD DD 6E 00         ld L,(IX+0)
- 439+ 03B0 DD 23            inc IX
- 440+ 03B2 DD 66 00         ld H,(IX+0)
- 441+ 03B5 DD 23            inc IX
- 442+ 03B7              rpop2:
- 443+ 03B7 C9               ret
- 444+ 03B8
- 445+ 03B8              writeChar:
- 446+ 03B8 77               ld (hl),A
- 447+ 03B9 23               inc hl
- 448+ 03BA C3 85 00         jp putchar
- 449+ 03BD
- 450+ 03BD              enter:
- 451+ 03BD 60 69            ld hl,bc
- 452+ 03BF CD A2 03         call rpush                      ; save Instruction Pointer
- 453+ 03C2 C1               pop bc
- 454+ 03C3 0B               dec bc
- 455+ 03C4 FD E9            jp (iy)
- 456+ 03C6
- 457+ 03C6              carry:
- 458+ 03C6 21 00 00         ld hl,0
- 459+ 03C9 CB 15            rl l
- 460+ 03CB 22 6C 84         ld (vCarry),hl
- 461+ 03CE FD E9            jp (iy)
- 462+ 03D0
- 463+ 03D0              setByteMode:
- 464+ 03D0 3E FF            ld a,$FF
- 465+ 03D2 18 01            jr assignByteMode
- 466+ 03D4              resetByteMode:
- 467+ 03D4 AF               xor a
- 468+ 03D5              assignByteMode:
- 469+ 03D5 32 6A 84         ld (vByteMode),a
- 470+ 03D8 32 6B 84         ld (vByteMode+1),a
- 471+ 03DB FD E9            jp (iy)
- 472+ 03DD
- 473+ 03DD              false_:
- 474+ 03DD 21 00 00         ld hl,FALSE
- 475+ 03E0 18 03            jr true1
- 476+ 03E2
- 477+ 03E2              true_:
- 478+ 03E2 21 FF FF         ld hl,TRUE
- 479+ 03E5              true1:
- 480+ 03E5 E5               push hl
- 481+ 03E6 FD E9            jp (iy)
- 482+ 03E8
- 483+ 03E8              ; **********************************************************************
- 484+ 03E8              ; Page 4 primitive routines
- 485+ 03E8              ; **********************************************************************
- 486+ 03E8 00 00 00...      .align $100
- 487+ 0400              page4:
- 488+ 0400
- 489+ 0400              quote_:                          ; Discard the top member of the stack
- 490+ 0400 E1               pop     hl
- 491+ 0401              at_:
- 492+ 0401              underscore_:
- 493+ 0401 FD E9            jp (iy)
- 494+ 0403
- 495+ 0403              bslash_:
- 496+ 0403 18 CB            jr setByteMode
- 497+ 0405
- 498+ 0405              var_:
- 499+ 0405 0A               ld a,(bc)
- 500+ 0406 21 00 84         ld hl,vars
- 501+ 0409 CD 30 03         call lookupRef
- 502+ 040C              var1:
- 503+ 040C 22 9C 84         ld (vPointer),hl
- 504+ 040F 16 00            ld d,0
- 505+ 0411 5E               ld e,(hl)
- 506+ 0412 3A 6A 84         ld a,(vByteMode)
- 507+ 0415 3C               inc a                       ; is it byte?
- 508+ 0416 28 02            jr z,var2
- 509+ 0418 23               inc hl
- 510+ 0419 56               ld d,(hl)
- 511+ 041A              var2:
- 512+ 041A D5               push de
- 513+ 041B 18 B7            jr resetByteMode
- 514+ 041D
- 515+ 041D              bang_:                      ; Store the value at the address placed on the top of the stack
- 516+ 041D              assign:
- 517+ 041D E1               pop hl                  ; discard value of last accessed variable
- 518+ 041E D1               pop de                  ; new value
- 519+ 041F 2A 9C 84         ld hl,(vPointer)
- 520+ 0422 73               ld (hl),e
- 521+ 0423 3A 6A 84         ld a,(vByteMode)
- 522+ 0426 3C               inc a                   ; is it byte?
- 523+ 0427 28 02            jr z,assign1
- 524+ 0429 23               inc hl
- 525+ 042A 72               ld (hl),d
- 526+ 042B              assign1:
- 527+ 042B 18 A7            jr resetByteMode
- 528+ 042D
- 529+ 042D              amper_:
- 530+ 042D D1               pop de                  ;     Bitwise and the top 2 elements of the stack
- 531+ 042E E1               pop hl
- 532+ 042F 7B               ld a,E
- 533+ 0430 A5               and L
- 534+ 0431 6F               ld L,A
- 535+ 0432 7A               ld a,D
- 536+ 0433 A4               and H
- 537+ 0434              and1:
- 538+ 0434 67               ld h,a
- 539+ 0435              and2:
- 540+ 0435 E5               push hl
- 541+ 0436 FD E9            jp (iy)
- 542+ 0438
- 543+ 0438              pipe_:
- 544+ 0438 D1               pop de                  ; Bitwise or the top 2 elements of the stack
- 545+ 0439 E1               pop hl
- 546+ 043A 7B               ld a,E
- 547+ 043B B5               or L
- 548+ 043C 6F               ld L,A
- 549+ 043D 7A               ld a,D
- 550+ 043E B4               or h
- 551+ 043F 18 F3            jr and1
- 552+ 0441
- 553+ 0441              caret_:
- 554+ 0441 D1               pop     de              ; Bitwise XOR the top 2 elements of the stack
- 555+ 0442              xor1:
- 556+ 0442 E1               pop     hl
- 557+ 0443 7B               ld      a,E
- 558+ 0444 AD               XOR     L
- 559+ 0445 6F               ld      L,A
- 560+ 0446 7A               ld      a,D
- 561+ 0447 AC               XOR     H
- 562+ 0448 18 EA            jr and1
- 563+ 044A
- 564+ 044A              tilde_:
- 565+ 044A              invert:				        ; Bitwise INVert the top member of the stack
- 566+ 044A 11 FF FF         ld de, $FFFF            ; by xoring with $FFFF
- 567+ 044D 18 F3            jr xor1
- 568+ 044F
- 569+ 044F              plus_:                           ; add the top 2 members of the stack
- 570+ 044F D1               pop     de
- 571+ 0450 E1               pop     hl
- 572+ 0451 19               add     hl,de
- 573+ 0452 E5               push    hl
- 574+ 0453 C3 C6 03         jp carry
- 575+ 0456
- 576+ 0456              call_:
- 577+ 0456 0A               ld a,(bc)
- 578+ 0457 CD 29 03         call lookupRef0
- 579+ 045A 5E               ld E,(hl)
- 580+ 045B 23               inc hl
- 581+ 045C 56               ld D,(hl)
- 582+ 045D C3 54 06         jp go1
- 583+ 0460
- 584+ 0460              dot_:
- 585+ 0460 E1               pop hl
- 586+ 0461 CD C9 06         call printDec
- 587+ 0464              dot2:
- 588+ 0464 3E 20            ld a,' '
- 589+ 0466 CD 85 00         call putchar
- 590+ 0469 FD E9            jp (iy)
- 591+ 046B
- 592+ 046B              comma_:                          ; print hexadecimal
- 593+ 046B E1               pop     hl
- 594+ 046C CD 3C 03         call printhex
- 595+ 046F 18 F3            jr   dot2
- 596+ 0471
- 597+ 0471              dquote_:
- 598+ 0471 E1               pop     hl              ; Duplicate the top member of the stack
- 599+ 0472 E5               push    hl
- 600+ 0473 E5               push    hl
- 601+ 0474 FD E9            jp (iy)
- 602+ 0476
- 603+ 0476 C3 B4 02         jp NEXT             ; hardwire white space to always go to NEXT (important for arrays)
- 604+ 0479
- 605+ 0479              percent_:
- 606+ 0479 E1               pop hl              ; Duplicate 2nd element of the stack
- 607+ 047A D1               pop de
- 608+ 047B D5               push de
- 609+ 047C E5               push hl
- 610+ 047D D5               push de              ; and push it to top of stack
- 611+ 047E FD E9            jp (iy)
- 612+ 0480
- 613+ 0480              semi_:
- 614+ 0480 CD AD 03         call rpop               ; Restore Instruction pointer
- 615+ 0483 44 4D            ld bc,hl
- 616+ 0485 FD E9            jp (iy)
- 617+ 0487
- 618+ 0487              ;  Left shift { is multiply by 2
- 619+ 0487              lbrace_:
- 620+ 0487 E1               pop hl                  ; Duplicate the top member of the stack
- 621+ 0488 29               add hl,hl
- 622+ 0489 18 AA            jr and2                 ; shift left fallthrough into plus_
- 623+ 048B
- 624+ 048B              			;  Right shift } is a divide by 2
- 625+ 048B              rbrace_:
- 626+ 048B E1               pop hl                  ; Get the top member of the stack
- 627+ 048C              shr1:
- 628+ 048C CB 3C            SRL H
- 629+ 048E CB 1D            RR L
- 630+ 0490 18 A3            jr and2
- 631+ 0492
- 632+ 0492              ; $ swap                    ; a b -- b a Swap the top 2 elements of the stack
- 633+ 0492              dollar_:
- 634+ 0492 E1               pop hl
- 635+ 0493 E3               EX (SP),hl
- 636+ 0494 18 9F            jr and2
- 637+ 0496
- 638+ 0496              minus_:       		        ; Subtract the value 2nd on stack from top of stack
- 639+ 0496 03               inc bc                  ; check if sign of a number
- 640+ 0497 0A               ld a,(bc)
- 641+ 0498 0B               dec bc
- 642+ 0499 FE 30            cp "0"
- 643+ 049B 38 05            jr c,sub1
- 644+ 049D FE 3A            cp "9"+1
- 645+ 049F DA 3E 07         jp c,num
- 646+ 04A2              sub1:
- 647+ 04A2 D1               pop de
- 648+ 04A3 E1               pop hl
- 649+ 04A4              sub2:
- 650+ 04A4 A7               and A
- 651+ 04A5 ED 52            sbc hl,de
- 652+ 04A7 E5               push hl
- 653+ 04A8 C3 C6 03         jp carry
- 654+ 04AB
- 655+ 04AB              eq_:
- 656+ 04AB E1               pop hl
- 657+ 04AC D1               pop de
- 658+ 04AD B7               or a               ; reset the carry flag
- 659+ 04AE ED 52            sbc hl,de          ; only equality sets hl=0 here
- 660+ 04B0 CA E2 03         jp z,true_
- 661+ 04B3 C3 DD 03         jp false_
- 662+ 04B6
- 663+ 04B6              gt_:
- 664+ 04B6 E1               pop hl
- 665+ 04B7 D1               pop de
- 666+ 04B8 18 02            jr lt1_
- 667+ 04BA
- 668+ 04BA              lt_:
- 669+ 04BA D1               pop de
- 670+ 04BB E1               pop hl
- 671+ 04BC
- 672+ 04BC              lt1_:
- 673+ 04BC B7               or a                ; reset the carry flag
- 674+ 04BD ED 52            sbc hl,de           ; only equality sets hl=0 here
- 675+ 04BF DA E2 03         jp c,true_
- 676+ 04C2 C3 DD 03         jp false_
- 677+ 04C5
- 678+ 04C5              grave_:
- 679+ 04C5              str:
- 680+ 04C5 03               inc bc
- 681+ 04C6
- 682+ 04C6              str1:
- 683+ 04C6 0A               ld a, (bc)
- 684+ 04C7 03               inc bc
- 685+ 04C8 FE 60            cp "`"                      ; ` is the string terminator
- 686+ 04CA 28 05            jr Z,str2
- 687+ 04CC CD 85 00         call putchar
- 688+ 04CF 18 F5            jr str1
- 689+ 04D1              str2:
- 690+ 04D1 0B               dec bc
- 691+ 04D2 FD E9            jp   (IY)
- 692+ 04D4
- 693+ 04D4              lbrack_:
- 694+ 04D4              arrDef:
- 695+ 04D4 21 00 00         ld hl,0
- 696+ 04D7 39               add hl,sp                   ; save
- 697+ 04D8 CD A2 03         call rpush
- 698+ 04DB FD E9            jp (iy)
- 699+ 04DD
- 700+ 04DD              num_:
- 701+ 04DD C3 3E 07         jp num
- 702+ 04E0              rparen_:
- 703+ 04E0 C3 C4 05         jp again		            ; close loop
- 704+ 04E3              rbrack_:
- 705+ 04E3 C3 6E 07         jp arrEnd
- 706+ 04E6              colon_:
- 707+ 04E6 C3 11 07         jp def
- 708+ 04E9              lparen_:
- 709+ 04E9 C3 8A 05         jp begin
- 710+ 04EC
- 711+ 04EC              question_:
- 712+ 04EC 18 50            jr arrAccess
- 713+ 04EE              hash_:
- 714+ 04EE 18 5B            jr hex
- 715+ 04F0              star_:
- 716+ 04F0 18 78            jr mul
- 717+ 04F2              slash_:
- 718+ 04F2
- 719+ 04F2              alt_:                           ; falls through (must be on page 4)
- 720+ 04F2              ;*******************************************************************
- 721+ 04F2              ; Page 5 primitive routines
- 722+ 04F2              ;*******************************************************************
- 723+ 04F2              alt:
- 724+ 04F2 03               inc bc
- 725+ 04F3 0A               ld a,(bc)
- 726+ 04F4 FE 7B            cp "z"+1
- 727+ 04F6 30 0C            jr nc,alt1
- 728+ 04F8 FE 61            cp "a"
- 729+ 04FA 30 0C            jr nc,altVar
- 730+ 04FC FE 5B            cp "Z"+1
- 731+ 04FE 30 04            jr nc,alt1
- 732+ 0500 FE 41            cp "A"
- 733+ 0502 30 2D            jr nc,altCode
- 734+ 0504              alt1:
- 735+ 0504 0B               dec bc
- 736+ 0505 C3 B7 07         jp div
- 737+ 0508
- 738+ 0508              altVar:
- 739+ 0508 FE 69            cp "i"
- 740+ 050A 2E 00            ld l,0
- 741+ 050C CA 1E 05         jp z,loopVar
- 742+ 050F FE 6A            cp "j"
- 743+ 0511 2E 08            ld l,8
- 744+ 0513 28 09            jr z,loopVar
- 745+ 0515 21 68 84         ld hl,altVars
- 746+ 0518 CD 30 03         call lookupRef
- 747+ 051B C3 0C 04         jp var1
- 748+ 051E
- 749+ 051E              loopVar:
- 750+ 051E 26 00            ld h,0
- 751+ 0520 DD 54            ld d,ixh
- 752+ 0522 DD 5D            ld e,ixl
- 753+ 0524 19               add hl,de
- 754+ 0525 C3 0C 04         jp var1
- 755+ 0528
- 756+ 0528              comment:
- 757+ 0528 03               inc bc                      ; point to next char
- 758+ 0529 0A               ld a,(bc)
- 759+ 052A FE 0D            cp "\r"                     ; terminate at cr
- 760+ 052C 20 FA            jr NZ,comment
- 761+ 052E 0B               dec bc
- 762+ 052F FD E9            jp   (IY)
- 763+ 0531
- 764+ 0531              altCode:
- 765+ 0531 21 5E 83         ld hl,altCodes
- 766+ 0534 D6 41            sub "A"
- 767+ 0536 85               add a,L
- 768+ 0537 6F               ld L,A
- 769+ 0538 7E               ld a,(hl)                   ;       get low jump address
- 770+ 0539 21 00 06         ld hl,page6
- 771+ 053C 6F               ld L,A
- 772+ 053D E9               jp (hl)                     ;       Jump to routine
- 773+ 053E
- 774+ 053E              arrAccess:
- 775+ 053E E1               pop hl                      ; hl = index
- 776+ 053F D1               pop de                      ; de = array
- 777+ 0540 3A 6A 84         ld a,(vByteMode)            ; a = data width
- 778+ 0543 3C               inc a
- 779+ 0544 28 01            jr z,arrAccess1
- 780+ 0546 29               add hl,hl                   ; if data width = 2 then double
- 781+ 0547              arrAccess1:
- 782+ 0547 19               add hl,de                   ; hl = addr
- 783+ 0548 C3 0C 04         jp var1
- 784+ 054B
- 785+ 054B              hex:
- 786+ 054B 21 00 00         ld hl,0	    		        ; Clear hl to accept the number
- 787+ 054E              hex1:
- 788+ 054E 03               inc bc
- 789+ 054F 0A               ld a,(bc)		            ; Get the character which is a numeral
- 790+ 0550 CB 77            BIT 6,A                     ; is it uppercase alpha?
- 791+ 0552 CA 57 05         jp Z, hex2                  ; no a decimal
- 792+ 0555 D6 07            sub 7                       ; sub 7  to make $A - $F
- 793+ 0557              hex2:
- 794+ 0557 D6 30            sub $30                     ; Form decimal digit
- 795+ 0559 DA 60 07         jp C,num2
- 796+ 055C FE 10            cp $0F+1
- 797+ 055E D2 60 07         jp NC,num2
- 798+ 0561 29               add hl,hl                   ; 2X ; Multiply digit(s) in hl by 16
- 799+ 0562 29               add hl,hl                   ; 4X
- 800+ 0563 29               add hl,hl                   ; 8X
- 801+ 0564 29               add hl,hl                   ; 16X
- 802+ 0565 85               add a,L                     ; add into bottom of hl
- 803+ 0566 6F               ld  L,A
- 804+ 0567 C3 4E 05         jp  hex1
- 805+ 056A
- 806+ 056A              mul:
- 807+ 056A D1               pop de                      ; de = 2nd arg
- 808+ 056B E1               pop hl                      ; hl = 1st arg
- 809+ 056C C5               push bc                     ; save IP
- 810+ 056D 7D               ld a,l
- 811+ 056E 4C               ld c,h
- 812+ 056F 06 10            ld b,16
- 813+ 0571 21 00 00         ld hl,0
- 814+ 0574              mul1:
- 815+ 0574 29               add hl,hl
- 816+ 0575 17               rla
- 817+ 0576 CB 11            rl c
- 818+ 0578 30 07            jr nc,mul2
- 819+ 057A 19               add hl,de
- 820+ 057B CE 00            adc a,0
- 821+ 057D D2 81 05         jp nc,mul2
- 822+ 0580 0C               inc c
- 823+ 0581              mul2:
- 824+ 0581 10 F1            djnz mul1
- 825+ 0583 EB               ex de,hl                    ; de = lsw result
- 826+ 0584 61               ld h,c
- 827+ 0585 6F               ld l,a                      ; hl = msw result
- 828+ 0586 C1               pop bc                      ; restore IP
- 829+ 0587 C3 F8 07     	jp divExit                  ; pushes lsw, puts msw in vRemain
- 830+ 058A
- 831+ 058A              begin:
- 832+ 058A              loopStart:
- 833+ 058A ED 43 02 82      ld (vTemp1),bc              ; save start
- 834+ 058E 1E 01            ld e,1                      ; skip to loop end, nesting = 1
- 835+ 0590              loopStart1:
- 836+ 0590 03               inc bc
- 837+ 0591 0A               ld a,(bc)
- 838+ 0592 CD 5B 03         call nesting                ; affects zero flag
- 839+ 0595 20 F9            jr nz,loopStart1
- 840+ 0597 D1               pop de                      ; de = limit
- 841+ 0598 7B               ld a,e                      ; is it zero?
- 842+ 0599 B2               or d
- 843+ 059A 20 07            jr nz,loopStart2
- 844+ 059C 1B               dec de                      ; de = TRUE
- 845+ 059D ED 53 9E 84      ld (vElse),de
- 846+ 05A1 18 1F            jr loopStart4               ; yes continue after skip
- 847+ 05A3              loopStart2:
- 848+ 05A3 3E 02            ld a,2                      ; is it TRUE
- 849+ 05A5 83               add a,e
- 850+ 05A6 82               add a,d
- 851+ 05A7 20 03            jr nz,loopStart3
- 852+ 05A9 11 01 00         ld de,1                     ; yes make it 1
- 853+ 05AC              loopStart3:
- 854+ 05AC 60 69            ld hl,bc
- 855+ 05AE CD A2 03         call rpush                  ; rpush loop end
- 856+ 05B1 0B               dec bc                      ; IP points to ")"
- 857+ 05B2 2A 02 82         ld hl,(vTemp1)              ; restore start
- 858+ 05B5 CD A2 03         call rpush                  ; rpush start
- 859+ 05B8 EB               ex de,hl                    ; hl = limit
- 860+ 05B9 CD A2 03         call rpush                  ; rpush limit
- 861+ 05BC 21 FF FF         ld hl,-1                    ; hl = count = -1
- 862+ 05BF CD A2 03         call rpush                  ; rpush count
- 863+ 05C2              loopStart4:
- 864+ 05C2 FD E9            jp (iy)
- 865+ 05C4
- 866+ 05C4              again:
- 867+ 05C4              loopEnd:
- 868+ 05C4 DD 5E 02         ld e,(ix+2)                 ; de = limit
- 869+ 05C7 DD 56 03         ld d,(ix+3)
- 870+ 05CA 7B               ld a,e                      ; a = low(limit)
- 871+ 05CB B2               or d                        ; if limit 0 exit loop
- 872+ 05CC 28 2B            jr z,loopEnd4
- 873+ 05CE 13               inc de                      ; is limit -2
- 874+ 05CF 13               inc de
- 875+ 05D0 7B               ld a,e                      ; a = low(limit)
- 876+ 05D1 B2               or d                        ; if limit 0 exit loop
- 877+ 05D2 28 09            jr z,loopEnd2               ; yes, loop again
- 878+ 05D4 1B               dec de
- 879+ 05D5 1B               dec de
- 880+ 05D6 1B               dec de
- 881+ 05D7 DD 73 02         ld (ix+2),e
- 882+ 05DA DD 72 03         ld (ix+3),d
- 883+ 05DD              loopEnd2:
- 884+ 05DD DD 5E 00         ld e,(ix+0)                 ; inc counter
- 885+ 05E0 DD 56 01         ld d,(ix+1)
- 886+ 05E3 13               inc de
- 887+ 05E4 DD 73 00         ld (ix+0),e
- 888+ 05E7 DD 72 01         ld (ix+1),d
- 889+ 05EA              loopEnd3:
- 890+ 05EA 11 00 00         ld de,FALSE                 ; if clause ran then vElse = FALSE
- 891+ 05ED ED 53 9E 84      ld (vElse),de
- 892+ 05F1 DD 4E 04         ld c,(ix+4)                 ; IP = start
- 893+ 05F4 DD 46 05         ld b,(ix+5)
- 894+ 05F7 FD E9            jp (iy)
- 895+ 05F9              loopEnd4:
- 896+ 05F9 11 08 00         ld de,2*4                   ; rpop frame
- 897+ 05FC DD 19            add ix,de
- 898+ 05FE FD E9            jp (iy)
- 899+ 0600
- 900+ 0600              ; **************************************************************************
- 901+ 0600              ; Page 6 Alt primitives
- 902+ 0600              ; **************************************************************************
- 903+ 0600                  .align $100
- 904+ 0600              page6:
- 905+ 0600
- 906+ 0600              ; allocates raw heap memory in bytes (ignores byte mode)
- 907+ 0600              ; n -- a
- 908+ 0600              alloc_:
- 909+ 0600 D1               pop de
- 910+ 0601 2A 76 84         ld hl,(vHeapPtr)
- 911+ 0604 E5               push hl
- 912+ 0605 19               add hl,de
- 913+ 0606 22 76 84         ld (vHeapPtr),hl
- 914+ 0609              aNop_:
- 915+ 0609 FD E9            jp (iy)
- 916+ 060B
- 917+ 060B              ; returns the size of an array
- 918+ 060B              ; a -- n
- 919+ 060B              arrSize_:
- 920+ 060B              arrSize:
- 921+ 060B E1               pop hl
- 922+ 060C 2B               dec hl                      ; msb size
- 923+ 060D 56               ld d,(hl)
- 924+ 060E 2B               dec hl                      ; lsb size
- 925+ 060F 5E               ld e,(hl)
- 926+ 0610 D5               push de
- 927+ 0611 FD E9            jp (iy)
- 928+ 0613
- 929+ 0613              break_:
- 930+ 0613              while_:
- 931+ 0613              while:
- 932+ 0613 E1               pop hl
- 933+ 0614 7D               ld a,l
- 934+ 0615 B4               or h
- 935+ 0616 20 09            jr nz,while2
- 936+ 0618 DD 4E 06         ld c,(ix+6)                 ; IP = )
- 937+ 061B DD 46 07         ld b,(ix+7)
- 938+ 061E C3 F9 05         jp loopEnd4
- 939+ 0621              while2:
- 940+ 0621 FD E9            jp (iy)
- 941+ 0623
- 942+ 0623              depth_:
- 943+ 0623              depth:
- 944+ 0623 21 00 00         ld hl,0
- 945+ 0626 39               add hl,SP
- 946+ 0627 EB               EX de,hl
- 947+ 0628 21 00 82         ld hl,dStack
- 948+ 062B B7               or A
- 949+ 062C ED 52            sbc hl,de
- 950+ 062E C3 8C 04         jp shr1
- 951+ 0631
- 952+ 0631              falsex_:
- 953+ 0631 C3 DD 03         jp false_
- 954+ 0634
- 955+ 0634              printChar_:
- 956+ 0634 E1               pop hl
- 957+ 0635 7D               ld a,L
- 958+ 0636 CD 85 00         call putchar
- 959+ 0639 FD E9            jp (iy)
- 960+ 063B
- 961+ 063B              else_:
- 962+ 063B 2A 9E 84         ld hl,(vElse)
- 963+ 063E              else1:
- 964+ 063E E5               push hl
- 965+ 063F FD E9            jp (iy)
- 966+ 0641
- 967+ 0641              exec_:
- 968+ 0641 CD 46 06         call exec1
- 969+ 0644 FD E9            jp (iy)
- 970+ 0646              exec1:
- 971+ 0646 E1               pop hl
- 972+ 0647 E3               EX (SP),hl
- 973+ 0648 E9               jp (hl)
- 974+ 0649
- 975+ 0649              editDef_:
- 976+ 0649 CD 99 06         call editDef
- 977+ 064C FD E9            jp (iy)
- 978+ 064E
- 979+ 064E              prompt_:
- 980+ 064E CD 82 03         call prompt
- 981+ 0651 FD E9            jp (iy)
- 982+ 0653
- 983+ 0653              go_:
- 984+ 0653 D1               pop de
- 985+ 0654              go1:
- 986+ 0654 7A               ld a,D                      ; skip if destination address is null
- 987+ 0655 B3               or E
- 988+ 0656 28 0E            jr Z,go3
- 989+ 0658 60 69            ld hl,bc
- 990+ 065A 03               inc bc                      ; read next char from source
- 991+ 065B 0A               ld a,(bc)                   ; if ; to tail call optimise
- 992+ 065C FE 3B            cp ";"                      ; by jumping to rather than calling destination
- 993+ 065E 28 03            jr Z,go2
- 994+ 0660 CD A2 03         call rpush                  ; save Instruction Pointer
- 995+ 0663              go2:
- 996+ 0663 42 4B            ld bc,de
- 997+ 0665 0B               dec bc
- 998+ 0666              go3:
- 999+ 0666 FD E9            jp (iy)
-1000+ 0668
-1001+ 0668              key_:
-1002+ 0668 CD 81 00         call getchar
-1003+ 066B 26 00            ld H,0
-1004+ 066D 6F               ld L,A
-1005+ 066E 18 CE            jr else1
-1006+ 0670
-1007+ 0670              inPort_:
-1008+ 0670 E1               pop hl
-1009+ 0671 79               ld a,C
-1010+ 0672 4D               ld C,L
-1011+ 0673 ED 68            IN L,(C)
-1012+ 0675 26 00            ld H,0
-1013+ 0677 4F               ld C,A
-1014+ 0678 18 C4            jr else1
-1015+ 067A
-1016+ 067A              newln_:
-1017+ 067A CD 8B 03         call crlf
-1018+ 067D FD E9            jp (iy)
-1019+ 067F
-1020+ 067F              outPort_:
-1021+ 067F E1               pop hl
-1022+ 0680 59               ld E,C
-1023+ 0681 4D               ld C,L
-1024+ 0682 E1               pop hl
-1025+ 0683 ED 69            OUT (C),L
-1026+ 0685 4B               ld C,E
-1027+ 0686 FD E9            jp (iy)
-1028+ 0688
-1029+ 0688              truex_:
-1030+ 0688 C3 E2 03         jp true_
-1031+ 068B
-1032+ 068B              unlimit_:
-1033+ 068B 21 FE FF         ld hl,-2
-1034+ 068E 18 AE            jr else1
-1035+ 0690
-1036+ 0690              varAccess_:
-1037+ 0690 21 9C 84         ld hl,vPointer
-1038+ 0693 5E               ld e,(hl)
-1039+ 0694 23               inc hl
-1040+ 0695 56               ld d,(hl)
-1041+ 0696 D5               push de
-1042+ 0697 FD E9            jp (iy)
-1043+ 0699
-1044+ 0699              ;*******************************************************************
-1045+ 0699              ; Subroutines
-1046+ 0699              ;*******************************************************************
-1047+ 0699
-1048+ 0699              editDef:                        ; lookup up def based on number
-1049+ 0699 E1               pop hl                      ; pop ret address
-1050+ 069A E3               EX (SP),hl                  ; swap with TOS
-1051+ 069B 7D               ld a,L
-1052+ 069C 08               EX AF,AF'
-1053+ 069D 7D               ld a,l
-1054+ 069E CD 29 03         call lookupRef0
-1055+ 06A1 5E               ld E,(hl)
-1056+ 06A2 23               inc hl
-1057+ 06A3 56               ld D,(hl)
-1058+ 06A4 7A               ld a,D
-1059+ 06A5 B3               or E
-1060+ 06A6 21 00 80         ld hl,TIB
-1061+ 06A9 28 14            jr Z,editDef3
-1062+ 06AB 3E 3A            ld a,":"
-1063+ 06AD CD B8 03         call writeChar
-1064+ 06B0 08               EX AF,AF'
-1065+ 06B1 CD B8 03         call writeChar
-1066+ 06B4 18 01            jr editDef2
-1067+ 06B6              editDef1:
-1068+ 06B6 13               inc de
-1069+ 06B7              editDef2:
-1070+ 06B7 1A               ld a,(de)
-1071+ 06B8 CD B8 03         call writeChar
-1072+ 06BB FE 3B            cp ";"
-1073+ 06BD 20 F7            jr NZ,editDef1
-1074+ 06BF              editDef3:
-1075+ 06BF 11 00 80         ld de,TIB
-1076+ 06C2 B7               or A
-1077+ 06C3 ED 52            sbc hl,de
-1078+ 06C5 22 7C 84         ld (vTIBPtr),hl
-1079+ 06C8 C9               ret
-1080+ 06C9
-1081+ 06C9              ; hl = value
-1082+ 06C9              printDec:
-1083+ 06C9 CB 7C            bit 7,h
-1084+ 06CB 28 0B            jr z,printDec2
-1085+ 06CD 3E 2D            ld a,'-'
-1086+ 06CF CD 85 00         call putchar
-1087+ 06D2 AF               xor a
-1088+ 06D3 95               sub l
-1089+ 06D4 6F               ld l,a
-1090+ 06D5 9F               sbc a,a
-1091+ 06D6 94               sub h
-1092+ 06D7 67               ld h,a
-1093+ 06D8              printDec2:
-1094+ 06D8 C5               push bc
-1095+ 06D9 0E 00            ld c,0                      ; leading zeros flag = false
-1096+ 06DB 11 F0 D8         ld de,-10000
-1097+ 06DE CD FA 06         call printDec4
-1098+ 06E1 11 18 FC         ld de,-1000
-1099+ 06E4 CD FA 06         call printDec4
-1100+ 06E7 11 9C FF         ld de,-100
-1101+ 06EA CD FA 06         call printDec4
-1102+ 06ED 1E F6            ld e,-10
-1103+ 06EF CD FA 06         call printDec4
-1104+ 06F2 0C               inc c                       ; flag = true for at least digit
-1105+ 06F3 1E FF            ld e,-1
-1106+ 06F5 CD FA 06         call printDec4
-1107+ 06F8 C1               pop bc
-1108+ 06F9 C9               ret
-1109+ 06FA              printDec4:
-1110+ 06FA 06 2F            ld b,'0'-1
-1111+ 06FC              printDec5:
-1112+ 06FC 04               inc b
-1113+ 06FD 19               add hl,de
-1114+ 06FE 38 FC            jr c,printDec5
-1115+ 0700 ED 52            sbc hl,de
-1116+ 0702 3E 30            ld a,'0'
-1117+ 0704 B8               cp b
-1118+ 0705 20 05            jr nz,printDec6
-1119+ 0707 AF               xor a
-1120+ 0708 B1               or c
-1121+ 0709 C8               ret z
-1122+ 070A 18 01            jr printDec7
-1123+ 070C              printDec6:
-1124+ 070C 0C               inc c
-1125+ 070D              printDec7:
-1126+ 070D 78               ld a,b
-1127+ 070E C3 85 00         jp putchar
-1128+ 0711
-1129+ 0711              ;*******************************************************************
-1130+ 0711              ; Page 5 primitive routines continued
-1131+ 0711              ;*******************************************************************
-1132+ 0711
-1133+ 0711              def:                            ; Create a colon definition
-1134+ 0711 03               inc bc
-1135+ 0712 0A               ld  a,(bc)                  ; Get the next character
-1136+ 0713 FE 40            cp "@"                      ; is it anonymous
-1137+ 0715 20 08            jr nz,def0
-1138+ 0717 03               inc bc
-1139+ 0718 ED 5B 76 84      ld de,(vHeapPtr)            ; return start of definition
-1140+ 071C D5               push de
-1141+ 071D 18 0E            jr def1
-1142+ 071F              def0:
-1143+ 071F 32 9A 84         ld (vLastDef),a
-1144+ 0722 CD 29 03         call lookupRef0
-1145+ 0725 ED 5B 76 84      ld de,(vHeapPtr)            ; start of defintion
-1146+ 0729 73               ld (hl),E                   ; Save low byte of address in CFA
-1147+ 072A 23               inc hl
-1148+ 072B 72               ld (hl),D                   ; Save high byte of address in CFA+1
-1149+ 072C 03               inc bc
-1150+ 072D              def1:                               ; Skip to end of definition
-1151+ 072D 0A               ld a,(bc)                   ; Get the next character
-1152+ 072E 03               inc bc                      ; Point to next character
-1153+ 072F 12               ld (de),A
-1154+ 0730 13               inc de
-1155+ 0731 FE 3B            cp ";"                      ; Is it a semicolon
-1156+ 0733 28 02            jr Z, def2                  ; end the definition
-1157+ 0735 18 F6            jr  def1                    ; get the next element
-1158+ 0737              def2:
-1159+ 0737 0B               dec bc
-1160+ 0738              def3:
-1161+ 0738 ED 53 76 84      ld (vHeapPtr),de            ; bump heap ptr to after definiton
-1162+ 073C FD E9            jp (iy)
-1163+ 073E
-1164+ 073E              num:
-1165+ 073E 21 00 00     	ld hl,$0000				    ; Clear hl to accept the number
-1166+ 0741 0A           	ld a,(bc)				    ; Get numeral or -
-1167+ 0742 FE 2D            cp '-'
-1168+ 0744 20 01            jr nz,num0
-1169+ 0746 03               inc bc                      ; move to next char, no flags affected
-1170+ 0747              num0:
-1171+ 0747 08               ex af,af'                   ; save zero flag = 0 for later
-1172+ 0748              num1:
-1173+ 0748 0A               ld a,(bc)                   ; read digit
-1174+ 0749 D6 30            sub "0"                     ; less than 0?
-1175+ 074B 38 13            jr c, num2                  ; not a digit, exit loop
-1176+ 074D FE 0A            cp 10                       ; greater that 9?
-1177+ 074F 30 0F            jr nc, num2                 ; not a digit, exit loop
-1178+ 0751 03               inc bc                      ; inc IP
-1179+ 0752 54 5D            ld de,hl                    ; multiply hl * 10
-1180+ 0754 29               add hl,hl
-1181+ 0755 29               add hl,hl
-1182+ 0756 19               add hl,de
-1183+ 0757 29               add hl,hl
-1184+ 0758 85               add a,l                     ; add digit in a to hl
-1185+ 0759 6F               ld l,a
-1186+ 075A 3E 00            ld a,0
-1187+ 075C 8C               adc a,h
-1188+ 075D 67               ld h,a
-1189+ 075E 18 E8            jr num1
-1190+ 0760              num2:
-1191+ 0760 0B               dec bc
-1192+ 0761 08               ex af,af'                   ; restore zero flag
-1193+ 0762 20 07            jr nz, num3
-1194+ 0764 EB               ex de,hl                    ; negate the value of hl
-1195+ 0765 21 00 00         ld hl,0
-1196+ 0768 B7               or a                        ; jump to sub2
-1197+ 0769 ED 52            sbc hl,de
-1198+ 076B              num3:
-1199+ 076B E5               push hl                     ; Put the number on the stack
-1200+ 076C FD E9            jp (iy)                     ; and process the next character
-1201+ 076E
-1202+ 076E              arrEnd:
-1203+ 076E ED 43 02 82      ld (vTemp1),bc              ; save IP
-1204+ 0772 CD AD 03         call rpop
-1205+ 0775 22 04 82         ld (vTemp2),hl              ; save old SP
-1206+ 0778 54 5D            ld de,hl                    ; de = hl = old SP
-1207+ 077A B7               or a
-1208+ 077B ED 72            sbc hl,sp                   ; hl = array count (items on stack)
-1209+ 077D CB 3C            srl h                       ; num items = num bytes / 2
-1210+ 077F CB 1D            rr l
-1211+ 0781 44 4D            ld bc,hl                    ; bc = count
-1212+ 0783 2A 76 84         ld hl,(vHeapPtr)            ; hl = array[-4]
-1213+ 0786 71               ld (hl),c                   ; write num items in length word
-1214+ 0787 23               inc hl
-1215+ 0788 70               ld (hl),b
-1216+ 0789 23               inc hl                      ; hl = array[0], bc = count
-1217+ 078A                                              ; de = old SP, hl = array[0], bc = count
-1218+ 078A 18 11            jr arrayEnd2
-1219+ 078C              arrayEnd1:
-1220+ 078C 0B               dec bc                      ; dec items count
-1221+ 078D 1B               dec de
-1222+ 078E 1B               dec de
-1223+ 078F 1A               ld a,(de)                   ; a = lsb of stack item
-1224+ 0790 77               ld (hl),a                   ; write lsb of array item
-1225+ 0791 23               inc hl                      ; move to msb of array item
-1226+ 0792 3A 6A 84         ld a,(vByteMode)            ; vByteMode=1?
-1227+ 0795 3C               inc a
-1228+ 0796 28 05            jr z,arrayEnd2
-1229+ 0798 13               inc de
-1230+ 0799 1A               ld a,(de)                   ; a = msb of stack item
-1231+ 079A 1B               dec de
-1232+ 079B 77               ld (hl),a                   ; write msb of array item
-1233+ 079C 23               inc hl                      ; move to next word in array
-1234+ 079D              arrayEnd2:
-1235+ 079D 79               ld a,c                      ; if not zero loop
-1236+ 079E B0               or b
-1237+ 079F 20 EB            jr nz,arrayEnd1
-1238+ 07A1 EB               ex de,hl                    ; de = end of array
-1239+ 07A2 2A 04 82         ld hl,(vTemp2)
-1240+ 07A5 F9               ld sp,hl                    ; SP = old SP
-1241+ 07A6 2A 76 84         ld hl,(vHeapPtr)            ; de = array[-2]
-1242+ 07A9 23               inc hl
-1243+ 07AA 23               inc hl
-1244+ 07AB E5               push hl                     ; return array[0]
-1245+ 07AC ED 53 76 84      ld (vHeapPtr),de            ; move heap* to end of array
-1246+ 07B0 ED 4B 02 82      ld bc,(vTemp1)              ; restore IP
-1247+ 07B4 C3 D4 03         jp resetByteMode
-1248+ 07B7
-1249+ 07B7              div:
-1250+ 07B7 60 69            ld hl,bc                    ; hl = IP
-1251+ 07B9 C1               pop bc                      ; bc = denominator
-1252+ 07BA E3               ex (sp),hl                  ; save IP, hl = numerator
-1253+ 07BB 7C               ld a,h
-1254+ 07BC A8               xor b
-1255+ 07BD F5               push af
-1256+ 07BE A8               xor b
-1257+ 07BF F2 C8 07         jp p,absbc
-1258+ 07C2              ;absHL
-1259+ 07C2 AF               xor a
-1260+ 07C3 95               sub l
-1261+ 07C4 6F               ld l,a
-1262+ 07C5 9F               sbc a,a
-1263+ 07C6 94               sub h
-1264+ 07C7 67               ld h,a
-1265+ 07C8              absbc:
-1266+ 07C8 A8               xor b
-1267+ 07C9 F2 D2 07         jp p,$+9
-1268+ 07CC AF               xor a
-1269+ 07CD 91               sub c
-1270+ 07CE 4F               ld c,a
-1271+ 07CF 9F               sbc a,a
-1272+ 07D0 90               sub b
-1273+ 07D1 47               ld b,a
-1274+ 07D2 29               add hl,hl
-1275+ 07D3 3E 0F            ld a,15
-1276+ 07D5 11 00 00         ld de,0
-1277+ 07D8 EB               ex de,hl
-1278+ 07D9 18 04            jr jumpin
-1279+ 07DB              Loop1:
-1280+ 07DB 09               add hl,bc   ;--
-1281+ 07DC              Loop2:
-1282+ 07DC 3D               dec a       ;4
-1283+ 07DD 28 0E            jr z,EndSDiv ;12|7
-1284+ 07DF              jumpin:
-1285+ 07DF CB 23            sla e       ;8
-1286+ 07E1 CB 12            rl d        ;8
-1287+ 07E3 ED 6A            adc hl,hl   ;15
-1288+ 07E5 ED 42            sbc hl,bc   ;15
-1289+ 07E7 38 F2            jr c,Loop1  ;23-2b
-1290+ 07E9 1C               inc e       ;--
-1291+ 07EA C3 DC 07         jp Loop2    ;--
-1292+ 07ED              EndSDiv:
-1293+ 07ED F1               pop af
-1294+ 07EE F2 F7 07         jp p,div10
-1295+ 07F1 AF               xor a
-1296+ 07F2 93               sub e
-1297+ 07F3 5F               ld e,a
-1298+ 07F4 9F               sbc a,a
-1299+ 07F5 92               sub d
-1300+ 07F6 57               ld d,a
-1301+ 07F7              div10:
-1302+ 07F7 C1               pop bc
-1303+ 07F8              divExit:
-1304+ 07F8 D5               push de                     ; quotient
-1305+ 07F9 22 8A 84         ld (vRemain),hl             ; remainder
-1306+ 07FC FD E9            jp (iy)
-1307+ 07FE
-1308+ 07FE              ; *******************************************************************************
-1309+ 07FE              ; *********  END OF MAIN   ******************************************************
-1310+ 07FE              ; *******************************************************************************
+  44+ 00C9              	PADORG ROMSTART + $180
+  44+ 00C9             >    IF $ < ROMSTART + $180
+  44+ 00C9 00 00 00... >    BLOCK ROMSTART + $180-$
+  44+ 0180             >    ENDIF
+  44+ 0180             >    ORG ROMSTART + $180
+  45+ 0180                  .ORG   ROMSTART + $180		; 0+180 put mint code from here
+  46+ 0180
+  47+ 0180              ; **************************************************************************
+  48+ 0180              ; Macros must be written in Mint and end with ;
+  49+ 0180              ; this code must not span pages
+  50+ 0180              ; **************************************************************************
+  51+ 0180              macros:
+  52+ 0180
+  53+ 0180              reedit_:
+  54+ 0180 2F 7A 2F 5A      db "/z/Z;"			; remembers last line edited
+  54+ 0184 3B
+  55+ 0185
+  56+ 0185              edit_:
+  57+ 0185 60 3F 60 2F      db "`?`/K/P/Z;",0
+  57+ 0189 4B 2F 50 2F
+  57+ 018D 5A 3B 00
+  58+ 0190
+  59+ 0190              list_:
+  60+ 0190 2F 4E 32 36      db "/N26(/i65+/Z/k0>(/N))/P;",0
+  60+ 0194 28 2F 69 36
+  60+ 0198 35 2B 2F 5A
+  60+ 019C 2F 6B 30 3E
+  60+ 01A0 28 2F 4E 29
+  60+ 01A4 29 2F 50 3B
+  60+ 01A8 00
+  61+ 01A9
+  62+ 01A9              printStack_:
+  63+ 01A9 60 3D 3E 20      db "`=> `/s2- /D1-(",$22,",2-)'/N/P;",0
+  63+ 01AD 60 2F 73 32
+  63+ 01B1 2D 20 2F 44
+  63+ 01B5 31 2D 28 22
+  63+ 01B9 2C 32 2D 29
+  63+ 01BD 27 2F 4E 2F
+  63+ 01C1 50 3B 00
+  64+ 01C4
+  65+ 01C4              iOpcodes:
+  66+ 01C4                  LITDAT 15
+  66+ 01C4 0F          >    db 15
+  67+ 01C5 1D               db    low(bang_)        ;   !
+  68+ 01C6 71               db    low(dquote_)      ;   "
+  69+ 01C7 EE               db    low(hash_)        ;   #
+  70+ 01C8 92               db    low(dollar_)      ;   $
+  71+ 01C9 79               db    low(percent_)     ;   %
+  72+ 01CA 2D               db    low(amper_)       ;   &
+  73+ 01CB 00               db    low(quote_)       ;   '
+  74+ 01CC E9               db    low(lparen_)      ;   (
+  75+ 01CD E0               db    low(rparen_)      ;   )
+  76+ 01CE F0               db    low(star_)        ;   *
+  77+ 01CF 4F               db    low(plus_)        ;   +
+  78+ 01D0 6B               db    low(comma_)       ;   ,
+  79+ 01D1 96               db    low(minus_)       ;   -
+  80+ 01D2 60               db    low(dot_)         ;   .
+  81+ 01D3 F2               db    low(slash_)       ;   /
+  82+ 01D4
+  83+ 01D4                  REPDAT 10, low(num_)	; 10 x repeat lsb of add to the num routine
+  83+ 01D4             >
+  83+ 01D4 8A          >    db (10 | $80)
+  83+ 01D5 DD          >    db low(num_)
+  84+ 01D6
+  85+ 01D6                  LITDAT 7
+  85+ 01D6 07          >    db 7
+  86+ 01D7 E6               db    low(colon_)       ;    :
+  87+ 01D8 80               db    low(semi_)        ;    ;
+  88+ 01D9 BA               db    low(lt_)          ;    <
+  89+ 01DA AB               db    low(eq_)          ;    =
+  90+ 01DB B6               db    low(gt_)          ;    >
+  91+ 01DC EC               db    low(question_)    ;    ?
+  92+ 01DD 01               db    low(at_)          ;    @
+  93+ 01DE
+  94+ 01DE                  REPDAT 26, low(call_)	; call a command a, B ....Z
+  94+ 01DE             >
+  94+ 01DE 9A          >    db (26 | $80)
+  94+ 01DF 56          >    db low(call_)
+  95+ 01E0
+  96+ 01E0                  LITDAT 6
+  96+ 01E0 06          >    db 6
+  97+ 01E1 D4               db    low(lbrack_)      ;    [
+  98+ 01E2 03               db    low(bslash_)      ;    \
+  99+ 01E3 E3               db    low(rbrack_)      ;    ]
+ 100+ 01E4 41               db    low(caret_)       ;    ^
+ 101+ 01E5 01               db    low(underscore_)  ;    _
+ 102+ 01E6 C5               db    low(grave_)       ;    `   ; for printing `hello`
+ 103+ 01E7
+ 104+ 01E7                  REPDAT 26, low(var_)	; a b c .....z
+ 104+ 01E7             >
+ 104+ 01E7 9A          >    db (26 | $80)
+ 104+ 01E8 05          >    db low(var_)
+ 105+ 01E9
+ 106+ 01E9                  LITDAT 4
+ 106+ 01E9 04          >    db 4
+ 107+ 01EA 87               db    low(lbrace_)      ;    {
+ 108+ 01EB 38               db    low(pipe_)        ;    |
+ 109+ 01EC 8B               db    low(rbrace_)      ;    }
+ 110+ 01ED 4A               db    low(tilde_)       ;    ~ ( a b c -- b c a ) rotate
+ 111+ 01EE
+ 112+ 01EE              iAltCodes:
+ 113+ 01EE
+ 114+ 01EE                  LITDAT 26
+ 114+ 01EE 1A          >    db 26
+ 115+ 01EF 00               db     low(alloc_)      ;A      allocate some heap memory
+ 116+ 01F0 09               db     low(aNop_)       ;B
+ 117+ 01F1 34               db     low(printChar_)  ;C      print a char
+ 118+ 01F2 23               db     low(depth_)      ;D      depth of stack
+ 119+ 01F3 3B               db     low(else_)       ;E      else
+ 120+ 01F4 31               db     low(falsex_)     ;F      false condition
+ 121+ 01F5 53               db     low(go_)         ;G      go execute mint code
+ 122+ 01F6 09               db     low(aNop_)       ;H
+ 123+ 01F7 70               db     low(inPort_)     ;I      input from port
+ 124+ 01F8 09               db     low(aNop_)       ;J
+ 125+ 01F9 68               db     low(key_)        ;K      read a char from input
+ 126+ 01FA 09               db     low(aNop_)       ;L
+ 127+ 01FB 09               db     low(aNop_)       ;M
+ 128+ 01FC 7A               db     low(newln_)      ;N      prints a newline to output
+ 129+ 01FD 7F               db     low(outPort_)    ;O      output to port
+ 130+ 01FE 4E               db     low(prompt_)     ;P      print MINT prompt
+ 131+ 01FF 09               db     low(aNop_)       ;Q
+ 132+ 0200 09               db     low(aNop_)       ;R
+ 133+ 0201 0B               db     low(arrSize_)    ;S      array size
+ 134+ 0202 88               db     low(truex_)      ;T      true condition
+ 135+ 0203 8B               db     low(unlimit_)    ;U      unlimited loop
+ 136+ 0204 90               db     low(varAccess_)  ;V      address of last access
+ 137+ 0205 13               db     low(while_)      ;W      conditional break from loop
+ 138+ 0206 41               db     low(exec_)       ;X      execute machine code
+ 139+ 0207 09               db     low(aNop_)       ;Y
+ 140+ 0208 49               db     low(editDef_)    ;Z      edit line
+ 141+ 0209                  ENDDAT
+ 141+ 0209 00          >    db 0
+ 142+ 020A
+ 143+ 020A              backSpace:
+ 144+ 020A 79               ld a,c
+ 145+ 020B B0               or b
+ 146+ 020C 28 27            jr z, interpret2
+ 147+ 020E 0B               dec bc
+ 148+ 020F CD 92 03         call printStr
+ 149+ 0212 08 20 08 00      db "\b \b",0
+ 150+ 0216 18 1D            jr interpret2
+ 151+ 0218
+ 152+ 0218              start:
+ 153+ 0218 31 00 82         ld SP,dStack		; start of MINT
+ 154+ 021B CD DE 02         call init		    ; setups
+ 155+ 021E CD 92 03         call printStr		; prog count to stack, put code line 235 on stack then call print
+ 156+ 0221 4D 49 4E 54      db "MINT2.0\r\n",0
+ 156+ 0225 32 2E 30 0D
+ 156+ 0229 0A 00
+ 157+ 022B
+ 158+ 022B              interpret:
+ 159+ 022B CD 82 03         call prompt
+ 160+ 022E
+ 161+ 022E 01 00 00         ld bc,0                 ; load bc with offset into TIB, decide char into tib or execute or control
+ 162+ 0231 ED 43 7C 84      ld (vTIBPtr),bc
+ 163+ 0235
+ 164+ 0235              interpret2:                     ; calc nesting (a macro might have changed it)
+ 165+ 0235 1E 00            ld E,0                  ; initilize nesting value
+ 166+ 0237 C5               push bc                 ; save offset into TIB,
+ 167+ 0238                                          ; bc is also the count of chars in TIB
+ 168+ 0238 21 00 80         ld hl,TIB               ; hl is start of TIB
+ 169+ 023B 18 06            jr interpret4
+ 170+ 023D
+ 171+ 023D              interpret3:
+ 172+ 023D 7E               ld a,(hl)               ; A = char in TIB
+ 173+ 023E 23               inc hl                  ; inc pointer into TIB
+ 174+ 023F 0B               dec bc                  ; dec count of chars in TIB
+ 175+ 0240 CD 5B 03         call nesting            ; update nesting value
+ 176+ 0243
+ 177+ 0243              interpret4:
+ 178+ 0243 79               ld a,C                  ; is count zero?
+ 179+ 0244 B0               or B
+ 180+ 0245 20 F6            jr NZ, interpret3       ; if not loop
+ 181+ 0247 C1               pop bc                  ; restore offset into TIB
+ 182+ 0248
+ 183+ 0248              waitchar:
+ 184+ 0248 CD 81 00         call getchar            ; loop around waiting for character from serial port
+ 185+ 024B FE 20            cp $20			; compare to space
+ 186+ 024D 30 39            jr NC,waitchar1		; if >= space, if below 20 set cary flag
+ 187+ 024F FE 00            cp $0                   ; is it end of string? null end of string
+ 188+ 0251 28 59            jr Z,waitchar4
+ 189+ 0253 FE 0D            cp "\r"                 ; carriage return? ascii 13
+ 190+ 0255 28 3F            jr Z,waitchar3		; if anything else its macro/control
+ 191+ 0257 FE 08            cp CTRL_H
+ 192+ 0259 28 AF            jr z,backSpace
+ 193+ 025B 16 01            ld d,high(macros)
+ 194+ 025D FE 05            cp CTRL_E
+ 195+ 025F 1E 85            ld e,low(edit_)
+ 196+ 0261 28 14            jr z,macro
+ 197+ 0263 FE 12            cp CTRL_R
+ 198+ 0265 1E 80            ld e,low(reedit_)
+ 199+ 0267 28 0E            jr z,macro
+ 200+ 0269 FE 0C            cp CTRL_L
+ 201+ 026B 1E 90            ld e,low(list_)
+ 202+ 026D 28 08            jr z,macro
+ 203+ 026F FE 13            cp CTRL_S
+ 204+ 0271 1E A9            ld e,low(printStack_)
+ 205+ 0273 28 02            jr z,macro
+ 206+ 0275 18 BE            jr interpret2
+ 207+ 0277
+ 208+ 0277              macro:
+ 209+ 0277 ED 43 7C 84      ld (vTIBPtr),bc
+ 210+ 027B D5               push de
+ 211+ 027C CD BD 03         call enter		;mint go operation and jump to it
+ 212+ 027F 2F 47 00         db "/G",0
+ 213+ 0282 ED 4B 7C 84      ld bc,(vTIBPtr)
+ 214+ 0286 18 AD            jr interpret2
+ 215+ 0288
+ 216+ 0288              waitchar1:
+ 217+ 0288 21 00 80         ld hl,TIB
+ 218+ 028B 09               add hl,bc
+ 219+ 028C 77               ld (hl),A               ; store the character in textbuf
+ 220+ 028D 03               inc bc
+ 221+ 028E CD 85 00         call putchar            ; echo character to screen
+ 222+ 0291 CD 5B 03         call nesting
+ 223+ 0294 18 B2            jr  waitchar            ; wait for next character
+ 224+ 0296
+ 225+ 0296              waitchar3:
+ 226+ 0296 21 00 80         ld hl,TIB
+ 227+ 0299 09               add hl,bc
+ 228+ 029A 36 0D            ld (hl),"\r"            ; store the crlf in textbuf
+ 229+ 029C 23               inc hl
+ 230+ 029D 36 0A            ld (hl),"\n"
+ 231+ 029F 23               inc hl                  ; ????
+ 232+ 02A0 03               inc bc
+ 233+ 02A1 03               inc bc
+ 234+ 02A2 CD 8B 03         call crlf               ; echo character to screen
+ 235+ 02A5 7B               ld a,E                  ; if zero nesting append and ETX after \r
+ 236+ 02A6 B7               or A
+ 237+ 02A7 20 9F            jr NZ,waitchar
+ 238+ 02A9 36 03            ld (hl),$03             ; store end of text ETX in text buffer
+ 239+ 02AB 03               inc bc
+ 240+ 02AC
+ 241+ 02AC              waitchar4:
+ 242+ 02AC ED 43 7C 84      ld (vTIBPtr),bc
+ 243+ 02B0 01 00 80         ld bc,TIB               ; Instructions stored on heap at address HERE, we pressed enter
+ 244+ 02B3 0B               dec bc
+ 245+ 02B4
+ 246+ 02B4              NEXT:
+ 247+ 02B4 03               inc bc                      ; Increment the IP
+ 248+ 02B5 0A               ld a,(bc)                   ; Get the next character and dispatch
+ 249+ 02B6 B7               or a                        ; is it NUL?
+ 250+ 02B7 28 0F            jr z,exit
+ 251+ 02B9 FE 03            cp CTRL_C
+ 252+ 02BB 28 15            jr z,etx
+ 253+ 02BD D6 21            sub "!"
+ 254+ 02BF 38 F3            jr c,NEXT
+ 255+ 02C1 6F               ld L,A                      ; Index into table
+ 256+ 02C2 26 83            ld H,high(opcodes)           ; Start address of jump table
+ 257+ 02C4 6E               ld L,(hl)                   ; get low jump address
+ 258+ 02C5 26 04            ld H,high(page4)             ; Load H with the 1st page address
+ 259+ 02C7 E9               jp (hl)                     ; Jump to routine
+ 260+ 02C8
+ 261+ 02C8              exit:
+ 262+ 02C8 03               inc bc			; store offests into a table of bytes, smaller
+ 263+ 02C9 50 59            ld de,bc
+ 264+ 02CB CD AD 03         call rpop               ; Restore Instruction pointer
+ 265+ 02CE 44 4D            ld bc,hl
+ 266+ 02D0 EB               EX de,hl
+ 267+ 02D1 E9               jp (hl)
+ 268+ 02D2
+ 269+ 02D2              etx:
+ 270+ 02D2 21 00 7E         ld hl,-dStack               ; check if stack pointer is underwater
+ 271+ 02D5 39               add hl,SP
+ 272+ 02D6 30 03            jr NC,etx1
+ 273+ 02D8 31 00 82         ld SP,dStack
+ 274+ 02DB              etx1:
+ 275+ 02DB C3 2B 02         jp interpret
+ 276+ 02DE
+ 277+ 02DE              init:
+ 278+ 02DE DD 21 80 81      ld IX,rStack
+ 279+ 02E2 FD 21 B4 02      ld IY,NEXT		; IY provides a faster jump to NEXT
+ 280+ 02E6
+ 281+ 02E6 21 00 84         ld hl,vars
+ 282+ 02E9 54 5D            ld de,hl
+ 283+ 02EB 13               inc de
+ 284+ 02EC 36 00            ld (hl),0
+ 285+ 02EE 01 9C 00         ld bc,VARS_SIZE * 3         ; init vars, defs and altVars
+ 286+ 02F1 ED B0            LDIR
+ 287+ 02F3
+ 288+ 02F3 21 00 82         ld hl,dStack
+ 289+ 02F6 22 8C 84         ld (vStkStart),hl
+ 290+ 02F9 21 41 00         ld hl,65
+ 291+ 02FC 22 9A 84         ld (vLastDef),hl
+ 292+ 02FF 21 A0 84         ld hl,HEAP
+ 293+ 0302 22 76 84         ld (vHeapPtr),hl
+ 294+ 0305
+ 295+ 0305              initOps:
+ 296+ 0305 21 C4 01         ld hl, iOpcodes
+ 297+ 0308 11 00 83         ld de, opcodes
+ 298+ 030B 01 78 00         ld bc, $80-32-1-1+26
+ 299+ 030E
+ 300+ 030E              initOps1:
+ 301+ 030E 7E               ld a,(hl)
+ 302+ 030F 23               inc hl
+ 303+ 0310 CB 27            SLA A
+ 304+ 0312 C8               ret Z
+ 305+ 0313 38 09            jr C, initOps2
+ 306+ 0315 CB 3F            SRL A
+ 307+ 0317 4F               ld C,A
+ 308+ 0318 06 00            ld B,0
+ 309+ 031A ED B0            LDIR
+ 310+ 031C 18 F0            jr initOps1
+ 311+ 031E
+ 312+ 031E              initOps2:
+ 313+ 031E CB 3F            SRL A
+ 314+ 0320 47               ld B,A
+ 315+ 0321 7E               ld a,(hl)
+ 316+ 0322 23               inc hl
+ 317+ 0323              initOps2a:
+ 318+ 0323 12               ld (de),A
+ 319+ 0324 13               inc de
+ 320+ 0325 10 FC            DJNZ initOps2a
+ 321+ 0327 18 E5            jr initOps1
+ 322+ 0329
+ 323+ 0329              lookupRef0:
+ 324+ 0329 21 34 84         ld hl,defs
+ 325+ 032C D6 41            sub "A"
+ 326+ 032E 18 02            jr lookupRef1
+ 327+ 0330              lookupRef:
+ 328+ 0330 D6 61            sub "a"
+ 329+ 0332              lookupRef1:
+ 330+ 0332 87               add a,a
+ 331+ 0333 85               add a,l
+ 332+ 0334 6F               ld l,a
+ 333+ 0335 3E 00            ld a,0
+ 334+ 0337 8C               ADC a,h
+ 335+ 0338 67               ld h,a
+ 336+ 0339 AF               XOR a
+ 337+ 033A B3               or e                        ; sets Z flag if A-Z
+ 338+ 033B C9               ret
+ 339+ 033C
+ 340+ 033C              printhex:
+ 341+ 033C                                              ; Display hl as a 16-bit number in hex.
+ 342+ 033C C5               push bc                     ; preserve the IP
+ 343+ 033D 7C               ld a,H
+ 344+ 033E CD 47 03         call printhex2
+ 345+ 0341 7D               ld a,L
+ 346+ 0342 CD 47 03         call printhex2
+ 347+ 0345 C1               pop bc
+ 348+ 0346 C9               ret
+ 349+ 0347              printhex2:
+ 350+ 0347 4F               ld	C,A
+ 351+ 0348 1F           	RRA
+ 352+ 0349 1F           	RRA
+ 353+ 034A 1F           	RRA
+ 354+ 034B 1F           	RRA
+ 355+ 034C CD 50 03         call printhex3
+ 356+ 034F 79               ld a,C
+ 357+ 0350              printhex3:
+ 358+ 0350 E6 0F            and	0x0F
+ 359+ 0352 C6 90        	add	a,0x90
+ 360+ 0354 27           	DAA
+ 361+ 0355 CE 40        	ADC	a,0x40
+ 362+ 0357 27           	DAA
+ 363+ 0358 C3 85 00     	jp putchar
+ 364+ 035B
+ 365+ 035B              ; **************************************************************************
+ 366+ 035B              ; calculate nesting value
+ 367+ 035B              ; A is char to be tested,
+ 368+ 035B              ; E is the nesting value (initially 0)
+ 369+ 035B              ; E is increased by ( and [
+ 370+ 035B              ; E is decreased by ) and ]
+ 371+ 035B              ; E has its bit 7 toggled by `
+ 372+ 035B              ; limited to 127 levels
+ 373+ 035B              ; **************************************************************************
+ 374+ 035B
+ 375+ 035B              nesting:
+ 376+ 035B FE 60            cp '`'
+ 377+ 035D 20 05            jr NZ,nesting1
+ 378+ 035F 3E 80            ld a,$80
+ 379+ 0361 AB               xor e
+ 380+ 0362 5F               ld e,a
+ 381+ 0363 C9               ret
+ 382+ 0364              nesting1:
+ 383+ 0364 CB 7B            BIT 7,E
+ 384+ 0366 C0               ret NZ
+ 385+ 0367 FE 3A            cp ':'
+ 386+ 0369 28 08            jr Z,nesting2
+ 387+ 036B FE 5B            cp '['
+ 388+ 036D 28 04            jr Z,nesting2
+ 389+ 036F FE 28            cp '('
+ 390+ 0371 20 02            jr NZ,nesting3
+ 391+ 0373              nesting2:
+ 392+ 0373 1C               inc E
+ 393+ 0374 C9               ret
+ 394+ 0375              nesting3:
+ 395+ 0375 FE 3B            cp ';'
+ 396+ 0377 28 07            jr Z,nesting4
+ 397+ 0379 FE 5D            cp ']'
+ 398+ 037B 28 03            jr Z,nesting4
+ 399+ 037D FE 29            cp ')'
+ 400+ 037F C0               ret NZ
+ 401+ 0380              nesting4:
+ 402+ 0380 1D               dec E
+ 403+ 0381 C9               ret
+ 404+ 0382
+ 405+ 0382              prompt:
+ 406+ 0382 CD 92 03         call printStr
+ 407+ 0385 0D 0A 3E 20      db "\r\n> ",0
+ 407+ 0389 00
+ 408+ 038A C9               ret
+ 409+ 038B
+ 410+ 038B              crlf:
+ 411+ 038B CD 92 03         call printStr
+ 412+ 038E 0D 0A 00         db "\r\n",0
+ 413+ 0391 C9               ret
+ 414+ 0392
+ 415+ 0392              printStr:
+ 416+ 0392 E3               EX (SP),hl		                ; swap
+ 417+ 0393 CD 9D 03         call putStr
+ 418+ 0396 23               inc hl			                ; inc past null
+ 419+ 0397 E3               EX (SP),hl		                ; put it back
+ 420+ 0398 C9               ret
+ 421+ 0399
+ 422+ 0399              putStr0:
+ 423+ 0399 CD 85 00         call putchar
+ 424+ 039C 23               inc hl
+ 425+ 039D              putStr:
+ 426+ 039D 7E               ld a,(hl)
+ 427+ 039E B7               or A
+ 428+ 039F 20 F8            jr NZ,putStr0
+ 429+ 03A1 C9               ret
+ 430+ 03A2
+ 431+ 03A2              rpush:
+ 432+ 03A2 DD 2B            dec IX
+ 433+ 03A4 DD 74 00         ld (IX+0),H
+ 434+ 03A7 DD 2B            dec IX
+ 435+ 03A9 DD 75 00         ld (IX+0),L
+ 436+ 03AC C9               ret
+ 437+ 03AD
+ 438+ 03AD              rpop:
+ 439+ 03AD DD 6E 00         ld L,(IX+0)
+ 440+ 03B0 DD 23            inc IX
+ 441+ 03B2 DD 66 00         ld H,(IX+0)
+ 442+ 03B5 DD 23            inc IX
+ 443+ 03B7              rpop2:
+ 444+ 03B7 C9               ret
+ 445+ 03B8
+ 446+ 03B8              writeChar:
+ 447+ 03B8 77               ld (hl),A
+ 448+ 03B9 23               inc hl
+ 449+ 03BA C3 85 00         jp putchar
+ 450+ 03BD
+ 451+ 03BD              enter:
+ 452+ 03BD 60 69            ld hl,bc
+ 453+ 03BF CD A2 03         call rpush                      ; save Instruction Pointer
+ 454+ 03C2 C1               pop bc
+ 455+ 03C3 0B               dec bc
+ 456+ 03C4 FD E9            jp (iy)
+ 457+ 03C6
+ 458+ 03C6              carry:
+ 459+ 03C6 21 00 00         ld hl,0
+ 460+ 03C9 CB 15            rl l
+ 461+ 03CB 22 6C 84         ld (vCarry),hl
+ 462+ 03CE FD E9            jp (iy)
+ 463+ 03D0
+ 464+ 03D0              setByteMode:
+ 465+ 03D0 3E FF            ld a,$FF
+ 466+ 03D2 18 01            jr assignByteMode
+ 467+ 03D4              resetByteMode:
+ 468+ 03D4 AF               xor a
+ 469+ 03D5              assignByteMode:
+ 470+ 03D5 32 6A 84         ld (vByteMode),a
+ 471+ 03D8 32 6B 84         ld (vByteMode+1),a
+ 472+ 03DB FD E9            jp (iy)
+ 473+ 03DD
+ 474+ 03DD              false_:
+ 475+ 03DD 21 00 00         ld hl,FALSE
+ 476+ 03E0 18 03            jr true1
+ 477+ 03E2
+ 478+ 03E2              true_:
+ 479+ 03E2 21 FF FF         ld hl,TRUE
+ 480+ 03E5              true1:
+ 481+ 03E5 E5               push hl
+ 482+ 03E6 FD E9            jp (iy)
+ 483+ 03E8
+ 484+ 03E8              ; **********************************************************************
+ 485+ 03E8              ; Page 4 primitive routines
+ 486+ 03E8              ; **********************************************************************
+ 487+ 03E8 00 00 00...      .align $100
+ 488+ 0400              page4:
+ 489+ 0400
+ 490+ 0400              quote_:                          ; Discard the top member of the stack
+ 491+ 0400 E1               pop     hl
+ 492+ 0401              at_:
+ 493+ 0401              underscore_:
+ 494+ 0401 FD E9            jp (iy)
+ 495+ 0403
+ 496+ 0403              bslash_:
+ 497+ 0403 18 CB            jr setByteMode
+ 498+ 0405
+ 499+ 0405              var_:
+ 500+ 0405 0A               ld a,(bc)
+ 501+ 0406 21 00 84         ld hl,vars
+ 502+ 0409 CD 30 03         call lookupRef
+ 503+ 040C              var1:
+ 504+ 040C 22 9C 84         ld (vPointer),hl
+ 505+ 040F 16 00            ld d,0
+ 506+ 0411 5E               ld e,(hl)
+ 507+ 0412 3A 6A 84         ld a,(vByteMode)
+ 508+ 0415 3C               inc a                       ; is it byte?
+ 509+ 0416 28 02            jr z,var2
+ 510+ 0418 23               inc hl
+ 511+ 0419 56               ld d,(hl)
+ 512+ 041A              var2:
+ 513+ 041A D5               push de
+ 514+ 041B 18 B7            jr resetByteMode
+ 515+ 041D
+ 516+ 041D              bang_:                      ; Store the value at the address placed on the top of the stack
+ 517+ 041D              assign:
+ 518+ 041D E1               pop hl                  ; discard value of last accessed variable
+ 519+ 041E D1               pop de                  ; new value
+ 520+ 041F 2A 9C 84         ld hl,(vPointer)
+ 521+ 0422 73               ld (hl),e
+ 522+ 0423 3A 6A 84         ld a,(vByteMode)
+ 523+ 0426 3C               inc a                   ; is it byte?
+ 524+ 0427 28 02            jr z,assign1
+ 525+ 0429 23               inc hl
+ 526+ 042A 72               ld (hl),d
+ 527+ 042B              assign1:
+ 528+ 042B 18 A7            jr resetByteMode
+ 529+ 042D
+ 530+ 042D              amper_:
+ 531+ 042D D1               pop de                  ;     Bitwise and the top 2 elements of the stack
+ 532+ 042E E1               pop hl
+ 533+ 042F 7B               ld a,E
+ 534+ 0430 A5               and L
+ 535+ 0431 6F               ld L,A
+ 536+ 0432 7A               ld a,D
+ 537+ 0433 A4               and H
+ 538+ 0434              and1:
+ 539+ 0434 67               ld h,a
+ 540+ 0435              and2:
+ 541+ 0435 E5               push hl
+ 542+ 0436 FD E9            jp (iy)
+ 543+ 0438
+ 544+ 0438              pipe_:
+ 545+ 0438 D1               pop de                  ; Bitwise or the top 2 elements of the stack
+ 546+ 0439 E1               pop hl
+ 547+ 043A 7B               ld a,E
+ 548+ 043B B5               or L
+ 549+ 043C 6F               ld L,A
+ 550+ 043D 7A               ld a,D
+ 551+ 043E B4               or h
+ 552+ 043F 18 F3            jr and1
+ 553+ 0441
+ 554+ 0441              caret_:
+ 555+ 0441 D1               pop     de              ; Bitwise XOR the top 2 elements of the stack
+ 556+ 0442              xor1:
+ 557+ 0442 E1               pop     hl
+ 558+ 0443 7B               ld      a,E
+ 559+ 0444 AD               XOR     L
+ 560+ 0445 6F               ld      L,A
+ 561+ 0446 7A               ld      a,D
+ 562+ 0447 AC               XOR     H
+ 563+ 0448 18 EA            jr and1
+ 564+ 044A
+ 565+ 044A              tilde_:
+ 566+ 044A              invert:				        ; Bitwise INVert the top member of the stack
+ 567+ 044A 11 FF FF         ld de, $FFFF            ; by xoring with $FFFF
+ 568+ 044D 18 F3            jr xor1
+ 569+ 044F
+ 570+ 044F              plus_:                           ; add the top 2 members of the stack
+ 571+ 044F D1               pop     de
+ 572+ 0450 E1               pop     hl
+ 573+ 0451 19               add     hl,de
+ 574+ 0452 E5               push    hl
+ 575+ 0453 C3 C6 03         jp carry
+ 576+ 0456
+ 577+ 0456              call_:
+ 578+ 0456 0A               ld a,(bc)
+ 579+ 0457 CD 29 03         call lookupRef0
+ 580+ 045A 5E               ld E,(hl)
+ 581+ 045B 23               inc hl
+ 582+ 045C 56               ld D,(hl)
+ 583+ 045D C3 54 06         jp go1
+ 584+ 0460
+ 585+ 0460              dot_:
+ 586+ 0460 E1               pop hl
+ 587+ 0461 CD C9 06         call printDec
+ 588+ 0464              dot2:
+ 589+ 0464 3E 20            ld a,' '
+ 590+ 0466 CD 85 00         call putchar
+ 591+ 0469 FD E9            jp (iy)
+ 592+ 046B
+ 593+ 046B              comma_:                          ; print hexadecimal
+ 594+ 046B E1               pop     hl
+ 595+ 046C CD 3C 03         call printhex
+ 596+ 046F 18 F3            jr   dot2
+ 597+ 0471
+ 598+ 0471              dquote_:
+ 599+ 0471 E1               pop     hl              ; Duplicate the top member of the stack
+ 600+ 0472 E5               push    hl
+ 601+ 0473 E5               push    hl
+ 602+ 0474 FD E9            jp (iy)
+ 603+ 0476
+ 604+ 0476 C3 B4 02         jp NEXT             ; hardwire white space to always go to NEXT (important for arrays)
+ 605+ 0479
+ 606+ 0479              percent_:
+ 607+ 0479 E1               pop hl              ; Duplicate 2nd element of the stack
+ 608+ 047A D1               pop de
+ 609+ 047B D5               push de
+ 610+ 047C E5               push hl
+ 611+ 047D D5               push de              ; and push it to top of stack
+ 612+ 047E FD E9            jp (iy)
+ 613+ 0480
+ 614+ 0480              semi_:
+ 615+ 0480 CD AD 03         call rpop               ; Restore Instruction pointer
+ 616+ 0483 44 4D            ld bc,hl
+ 617+ 0485 FD E9            jp (iy)
+ 618+ 0487
+ 619+ 0487              ;  Left shift { is multiply by 2
+ 620+ 0487              lbrace_:
+ 621+ 0487 E1               pop hl                  ; Duplicate the top member of the stack
+ 622+ 0488 29               add hl,hl
+ 623+ 0489 18 AA            jr and2                 ; shift left fallthrough into plus_
+ 624+ 048B
+ 625+ 048B              			;  Right shift } is a divide by 2
+ 626+ 048B              rbrace_:
+ 627+ 048B E1               pop hl                  ; Get the top member of the stack
+ 628+ 048C              shr1:
+ 629+ 048C CB 3C            SRL H
+ 630+ 048E CB 1D            RR L
+ 631+ 0490 18 A3            jr and2
+ 632+ 0492
+ 633+ 0492              ; $ swap                    ; a b -- b a Swap the top 2 elements of the stack
+ 634+ 0492              dollar_:
+ 635+ 0492 E1               pop hl
+ 636+ 0493 E3               EX (SP),hl
+ 637+ 0494 18 9F            jr and2
+ 638+ 0496
+ 639+ 0496              minus_:       		        ; Subtract the value 2nd on stack from top of stack
+ 640+ 0496 03               inc bc                  ; check if sign of a number
+ 641+ 0497 0A               ld a,(bc)
+ 642+ 0498 0B               dec bc
+ 643+ 0499 FE 30            cp "0"
+ 644+ 049B 38 05            jr c,sub1
+ 645+ 049D FE 3A            cp "9"+1
+ 646+ 049F DA 3E 07         jp c,num
+ 647+ 04A2              sub1:
+ 648+ 04A2 D1               pop de
+ 649+ 04A3 E1               pop hl
+ 650+ 04A4              sub2:
+ 651+ 04A4 A7               and A
+ 652+ 04A5 ED 52            sbc hl,de
+ 653+ 04A7 E5               push hl
+ 654+ 04A8 C3 C6 03         jp carry
+ 655+ 04AB
+ 656+ 04AB              eq_:
+ 657+ 04AB E1               pop hl
+ 658+ 04AC D1               pop de
+ 659+ 04AD B7               or a               ; reset the carry flag
+ 660+ 04AE ED 52            sbc hl,de          ; only equality sets hl=0 here
+ 661+ 04B0 CA E2 03         jp z,true_
+ 662+ 04B3 C3 DD 03         jp false_
+ 663+ 04B6
+ 664+ 04B6              gt_:
+ 665+ 04B6 E1               pop hl
+ 666+ 04B7 D1               pop de
+ 667+ 04B8 18 02            jr lt1_
+ 668+ 04BA
+ 669+ 04BA              lt_:
+ 670+ 04BA D1               pop de
+ 671+ 04BB E1               pop hl
+ 672+ 04BC
+ 673+ 04BC              lt1_:
+ 674+ 04BC B7               or a                ; reset the carry flag
+ 675+ 04BD ED 52            sbc hl,de           ; only equality sets hl=0 here
+ 676+ 04BF DA E2 03         jp c,true_
+ 677+ 04C2 C3 DD 03         jp false_
+ 678+ 04C5
+ 679+ 04C5              grave_:
+ 680+ 04C5              str:
+ 681+ 04C5 03               inc bc
+ 682+ 04C6
+ 683+ 04C6              str1:
+ 684+ 04C6 0A               ld a, (bc)
+ 685+ 04C7 03               inc bc
+ 686+ 04C8 FE 60            cp "`"                      ; ` is the string terminator
+ 687+ 04CA 28 05            jr Z,str2
+ 688+ 04CC CD 85 00         call putchar
+ 689+ 04CF 18 F5            jr str1
+ 690+ 04D1              str2:
+ 691+ 04D1 0B               dec bc
+ 692+ 04D2 FD E9            jp   (IY)
+ 693+ 04D4
+ 694+ 04D4              lbrack_:
+ 695+ 04D4              arrDef:
+ 696+ 04D4 21 00 00         ld hl,0
+ 697+ 04D7 39               add hl,sp                   ; save
+ 698+ 04D8 CD A2 03         call rpush
+ 699+ 04DB FD E9            jp (iy)
+ 700+ 04DD
+ 701+ 04DD              num_:
+ 702+ 04DD C3 3E 07         jp num
+ 703+ 04E0              rparen_:
+ 704+ 04E0 C3 C4 05         jp again		            ; close loop
+ 705+ 04E3              rbrack_:
+ 706+ 04E3 C3 6E 07         jp arrEnd
+ 707+ 04E6              colon_:
+ 708+ 04E6 C3 11 07         jp def
+ 709+ 04E9              lparen_:
+ 710+ 04E9 C3 8A 05         jp begin
+ 711+ 04EC
+ 712+ 04EC              question_:
+ 713+ 04EC 18 50            jr arrAccess
+ 714+ 04EE              hash_:
+ 715+ 04EE 18 5B            jr hex
+ 716+ 04F0              star_:
+ 717+ 04F0 18 78            jr mul
+ 718+ 04F2              slash_:
+ 719+ 04F2
+ 720+ 04F2              alt_:                           ; falls through (must be on page 4)
+ 721+ 04F2              ;*******************************************************************
+ 722+ 04F2              ; Page 5 primitive routines
+ 723+ 04F2              ;*******************************************************************
+ 724+ 04F2              alt:
+ 725+ 04F2 03               inc bc
+ 726+ 04F3 0A               ld a,(bc)
+ 727+ 04F4 FE 7B            cp "z"+1
+ 728+ 04F6 30 0C            jr nc,alt1
+ 729+ 04F8 FE 61            cp "a"
+ 730+ 04FA 30 0C            jr nc,altVar
+ 731+ 04FC FE 5B            cp "Z"+1
+ 732+ 04FE 30 04            jr nc,alt1
+ 733+ 0500 FE 41            cp "A"
+ 734+ 0502 30 2D            jr nc,altCode
+ 735+ 0504              alt1:
+ 736+ 0504 0B               dec bc
+ 737+ 0505 C3 B7 07         jp div
+ 738+ 0508
+ 739+ 0508              altVar:
+ 740+ 0508 FE 69            cp "i"
+ 741+ 050A 2E 00            ld l,0
+ 742+ 050C CA 1E 05         jp z,loopVar
+ 743+ 050F FE 6A            cp "j"
+ 744+ 0511 2E 08            ld l,8
+ 745+ 0513 28 09            jr z,loopVar
+ 746+ 0515 21 68 84         ld hl,altVars
+ 747+ 0518 CD 30 03         call lookupRef
+ 748+ 051B C3 0C 04         jp var1
+ 749+ 051E
+ 750+ 051E              loopVar:
+ 751+ 051E 26 00            ld h,0
+ 752+ 0520 DD 54            ld d,ixh
+ 753+ 0522 DD 5D            ld e,ixl
+ 754+ 0524 19               add hl,de
+ 755+ 0525 C3 0C 04         jp var1
+ 756+ 0528
+ 757+ 0528              comment:
+ 758+ 0528 03               inc bc                      ; point to next char
+ 759+ 0529 0A               ld a,(bc)
+ 760+ 052A FE 0D            cp "\r"                     ; terminate at cr
+ 761+ 052C 20 FA            jr NZ,comment
+ 762+ 052E 0B               dec bc
+ 763+ 052F FD E9            jp   (IY)
+ 764+ 0531
+ 765+ 0531              altCode:
+ 766+ 0531 21 5E 83         ld hl,altCodes
+ 767+ 0534 D6 41            sub "A"
+ 768+ 0536 85               add a,L
+ 769+ 0537 6F               ld L,A
+ 770+ 0538 7E               ld a,(hl)                   ;       get low jump address
+ 771+ 0539 21 00 06         ld hl,page6
+ 772+ 053C 6F               ld L,A
+ 773+ 053D E9               jp (hl)                     ;       Jump to routine
+ 774+ 053E
+ 775+ 053E              arrAccess:
+ 776+ 053E E1               pop hl                      ; hl = index
+ 777+ 053F D1               pop de                      ; de = array
+ 778+ 0540 3A 6A 84         ld a,(vByteMode)            ; a = data width
+ 779+ 0543 3C               inc a
+ 780+ 0544 28 01            jr z,arrAccess1
+ 781+ 0546 29               add hl,hl                   ; if data width = 2 then double
+ 782+ 0547              arrAccess1:
+ 783+ 0547 19               add hl,de                   ; hl = addr
+ 784+ 0548 C3 0C 04         jp var1
+ 785+ 054B
+ 786+ 054B              hex:
+ 787+ 054B 21 00 00         ld hl,0	    		        ; Clear hl to accept the number
+ 788+ 054E              hex1:
+ 789+ 054E 03               inc bc
+ 790+ 054F 0A               ld a,(bc)		            ; Get the character which is a numeral
+ 791+ 0550 CB 77            BIT 6,A                     ; is it uppercase alpha?
+ 792+ 0552 CA 57 05         jp Z, hex2                  ; no a decimal
+ 793+ 0555 D6 07            sub 7                       ; sub 7  to make $A - $F
+ 794+ 0557              hex2:
+ 795+ 0557 D6 30            sub $30                     ; Form decimal digit
+ 796+ 0559 DA 60 07         jp C,num2
+ 797+ 055C FE 10            cp $0F+1
+ 798+ 055E D2 60 07         jp NC,num2
+ 799+ 0561 29               add hl,hl                   ; 2X ; Multiply digit(s) in hl by 16
+ 800+ 0562 29               add hl,hl                   ; 4X
+ 801+ 0563 29               add hl,hl                   ; 8X
+ 802+ 0564 29               add hl,hl                   ; 16X
+ 803+ 0565 85               add a,L                     ; add into bottom of hl
+ 804+ 0566 6F               ld  L,A
+ 805+ 0567 C3 4E 05         jp  hex1
+ 806+ 056A
+ 807+ 056A              mul:
+ 808+ 056A D1               pop de                      ; de = 2nd arg
+ 809+ 056B E1               pop hl                      ; hl = 1st arg
+ 810+ 056C C5               push bc                     ; save IP
+ 811+ 056D 7D               ld a,l
+ 812+ 056E 4C               ld c,h
+ 813+ 056F 06 10            ld b,16
+ 814+ 0571 21 00 00         ld hl,0
+ 815+ 0574              mul1:
+ 816+ 0574 29               add hl,hl
+ 817+ 0575 17               rla
+ 818+ 0576 CB 11            rl c
+ 819+ 0578 30 07            jr nc,mul2
+ 820+ 057A 19               add hl,de
+ 821+ 057B CE 00            adc a,0
+ 822+ 057D D2 81 05         jp nc,mul2
+ 823+ 0580 0C               inc c
+ 824+ 0581              mul2:
+ 825+ 0581 10 F1            djnz mul1
+ 826+ 0583 EB               ex de,hl                    ; de = lsw result
+ 827+ 0584 61               ld h,c
+ 828+ 0585 6F               ld l,a                      ; hl = msw result
+ 829+ 0586 C1               pop bc                      ; restore IP
+ 830+ 0587 C3 F8 07     	jp divExit                  ; pushes lsw, puts msw in vRemain
+ 831+ 058A
+ 832+ 058A              begin:
+ 833+ 058A              loopStart:
+ 834+ 058A ED 43 02 82      ld (vTemp1),bc              ; save start
+ 835+ 058E 1E 01            ld e,1                      ; skip to loop end, nesting = 1
+ 836+ 0590              loopStart1:
+ 837+ 0590 03               inc bc
+ 838+ 0591 0A               ld a,(bc)
+ 839+ 0592 CD 5B 03         call nesting                ; affects zero flag
+ 840+ 0595 20 F9            jr nz,loopStart1
+ 841+ 0597 D1               pop de                      ; de = limit
+ 842+ 0598 7B               ld a,e                      ; is it zero?
+ 843+ 0599 B2               or d
+ 844+ 059A 20 07            jr nz,loopStart2
+ 845+ 059C 1B               dec de                      ; de = TRUE
+ 846+ 059D ED 53 9E 84      ld (vElse),de
+ 847+ 05A1 18 1F            jr loopStart4               ; yes continue after skip
+ 848+ 05A3              loopStart2:
+ 849+ 05A3 3E 02            ld a,2                      ; is it TRUE
+ 850+ 05A5 83               add a,e
+ 851+ 05A6 82               add a,d
+ 852+ 05A7 20 03            jr nz,loopStart3
+ 853+ 05A9 11 01 00         ld de,1                     ; yes make it 1
+ 854+ 05AC              loopStart3:
+ 855+ 05AC 60 69            ld hl,bc
+ 856+ 05AE CD A2 03         call rpush                  ; rpush loop end
+ 857+ 05B1 0B               dec bc                      ; IP points to ")"
+ 858+ 05B2 2A 02 82         ld hl,(vTemp1)              ; restore start
+ 859+ 05B5 CD A2 03         call rpush                  ; rpush start
+ 860+ 05B8 EB               ex de,hl                    ; hl = limit
+ 861+ 05B9 CD A2 03         call rpush                  ; rpush limit
+ 862+ 05BC 21 FF FF         ld hl,-1                    ; hl = count = -1
+ 863+ 05BF CD A2 03         call rpush                  ; rpush count
+ 864+ 05C2              loopStart4:
+ 865+ 05C2 FD E9            jp (iy)
+ 866+ 05C4
+ 867+ 05C4              again:
+ 868+ 05C4              loopEnd:
+ 869+ 05C4 DD 5E 02         ld e,(ix+2)                 ; de = limit
+ 870+ 05C7 DD 56 03         ld d,(ix+3)
+ 871+ 05CA 7B               ld a,e                      ; a = low(limit)
+ 872+ 05CB B2               or d                        ; if limit 0 exit loop
+ 873+ 05CC 28 2B            jr z,loopEnd4
+ 874+ 05CE 13               inc de                      ; is limit -2
+ 875+ 05CF 13               inc de
+ 876+ 05D0 7B               ld a,e                      ; a = low(limit)
+ 877+ 05D1 B2               or d                        ; if limit 0 exit loop
+ 878+ 05D2 28 09            jr z,loopEnd2               ; yes, loop again
+ 879+ 05D4 1B               dec de
+ 880+ 05D5 1B               dec de
+ 881+ 05D6 1B               dec de
+ 882+ 05D7 DD 73 02         ld (ix+2),e
+ 883+ 05DA DD 72 03         ld (ix+3),d
+ 884+ 05DD              loopEnd2:
+ 885+ 05DD DD 5E 00         ld e,(ix+0)                 ; inc counter
+ 886+ 05E0 DD 56 01         ld d,(ix+1)
+ 887+ 05E3 13               inc de
+ 888+ 05E4 DD 73 00         ld (ix+0),e
+ 889+ 05E7 DD 72 01         ld (ix+1),d
+ 890+ 05EA              loopEnd3:
+ 891+ 05EA 11 00 00         ld de,FALSE                 ; if clause ran then vElse = FALSE
+ 892+ 05ED ED 53 9E 84      ld (vElse),de
+ 893+ 05F1 DD 4E 04         ld c,(ix+4)                 ; IP = start
+ 894+ 05F4 DD 46 05         ld b,(ix+5)
+ 895+ 05F7 FD E9            jp (iy)
+ 896+ 05F9              loopEnd4:
+ 897+ 05F9 11 08 00         ld de,2*4                   ; rpop frame
+ 898+ 05FC DD 19            add ix,de
+ 899+ 05FE FD E9            jp (iy)
+ 900+ 0600
+ 901+ 0600              ; **************************************************************************
+ 902+ 0600              ; Page 6 Alt primitives
+ 903+ 0600              ; **************************************************************************
+ 904+ 0600                  .align $100
+ 905+ 0600              page6:
+ 906+ 0600
+ 907+ 0600              ; allocates raw heap memory in bytes (ignores byte mode)
+ 908+ 0600              ; n -- a
+ 909+ 0600              alloc_:
+ 910+ 0600 D1               pop de
+ 911+ 0601 2A 76 84         ld hl,(vHeapPtr)
+ 912+ 0604 E5               push hl
+ 913+ 0605 19               add hl,de
+ 914+ 0606 22 76 84         ld (vHeapPtr),hl
+ 915+ 0609              aNop_:
+ 916+ 0609 FD E9            jp (iy)
+ 917+ 060B
+ 918+ 060B              ; returns the size of an array
+ 919+ 060B              ; a -- n
+ 920+ 060B              arrSize_:
+ 921+ 060B              arrSize:
+ 922+ 060B E1               pop hl
+ 923+ 060C 2B               dec hl                      ; msb size
+ 924+ 060D 56               ld d,(hl)
+ 925+ 060E 2B               dec hl                      ; lsb size
+ 926+ 060F 5E               ld e,(hl)
+ 927+ 0610 D5               push de
+ 928+ 0611 FD E9            jp (iy)
+ 929+ 0613
+ 930+ 0613              break_:
+ 931+ 0613              while_:
+ 932+ 0613              while:
+ 933+ 0613 E1               pop hl
+ 934+ 0614 7D               ld a,l
+ 935+ 0615 B4               or h
+ 936+ 0616 20 09            jr nz,while2
+ 937+ 0618 DD 4E 06         ld c,(ix+6)                 ; IP = )
+ 938+ 061B DD 46 07         ld b,(ix+7)
+ 939+ 061E C3 F9 05         jp loopEnd4
+ 940+ 0621              while2:
+ 941+ 0621 FD E9            jp (iy)
+ 942+ 0623
+ 943+ 0623              depth_:
+ 944+ 0623              depth:
+ 945+ 0623 21 00 00         ld hl,0
+ 946+ 0626 39               add hl,SP
+ 947+ 0627 EB               EX de,hl
+ 948+ 0628 21 00 82         ld hl,dStack
+ 949+ 062B B7               or A
+ 950+ 062C ED 52            sbc hl,de
+ 951+ 062E C3 8C 04         jp shr1
+ 952+ 0631
+ 953+ 0631              falsex_:
+ 954+ 0631 C3 DD 03         jp false_
+ 955+ 0634
+ 956+ 0634              printChar_:
+ 957+ 0634 E1               pop hl
+ 958+ 0635 7D               ld a,L
+ 959+ 0636 CD 85 00         call putchar
+ 960+ 0639 FD E9            jp (iy)
+ 961+ 063B
+ 962+ 063B              else_:
+ 963+ 063B 2A 9E 84         ld hl,(vElse)
+ 964+ 063E              else1:
+ 965+ 063E E5               push hl
+ 966+ 063F FD E9            jp (iy)
+ 967+ 0641
+ 968+ 0641              exec_:
+ 969+ 0641 CD 46 06         call exec1
+ 970+ 0644 FD E9            jp (iy)
+ 971+ 0646              exec1:
+ 972+ 0646 E1               pop hl
+ 973+ 0647 E3               EX (SP),hl
+ 974+ 0648 E9               jp (hl)
+ 975+ 0649
+ 976+ 0649              editDef_:
+ 977+ 0649 CD 99 06         call editDef
+ 978+ 064C FD E9            jp (iy)
+ 979+ 064E
+ 980+ 064E              prompt_:
+ 981+ 064E CD 82 03         call prompt
+ 982+ 0651 FD E9            jp (iy)
+ 983+ 0653
+ 984+ 0653              go_:
+ 985+ 0653 D1               pop de
+ 986+ 0654              go1:
+ 987+ 0654 7A               ld a,D                      ; skip if destination address is null
+ 988+ 0655 B3               or E
+ 989+ 0656 28 0E            jr Z,go3
+ 990+ 0658 60 69            ld hl,bc
+ 991+ 065A 03               inc bc                      ; read next char from source
+ 992+ 065B 0A               ld a,(bc)                   ; if ; to tail call optimise
+ 993+ 065C FE 3B            cp ";"                      ; by jumping to rather than calling destination
+ 994+ 065E 28 03            jr Z,go2
+ 995+ 0660 CD A2 03         call rpush                  ; save Instruction Pointer
+ 996+ 0663              go2:
+ 997+ 0663 42 4B            ld bc,de
+ 998+ 0665 0B               dec bc
+ 999+ 0666              go3:
+1000+ 0666 FD E9            jp (iy)
+1001+ 0668
+1002+ 0668              key_:
+1003+ 0668 CD 81 00         call getchar
+1004+ 066B 26 00            ld H,0
+1005+ 066D 6F               ld L,A
+1006+ 066E 18 CE            jr else1
+1007+ 0670
+1008+ 0670              inPort_:
+1009+ 0670 E1               pop hl
+1010+ 0671 79               ld a,C
+1011+ 0672 4D               ld C,L
+1012+ 0673 ED 68            IN L,(C)
+1013+ 0675 26 00            ld H,0
+1014+ 0677 4F               ld C,A
+1015+ 0678 18 C4            jr else1
+1016+ 067A
+1017+ 067A              newln_:
+1018+ 067A CD 8B 03         call crlf
+1019+ 067D FD E9            jp (iy)
+1020+ 067F
+1021+ 067F              outPort_:
+1022+ 067F E1               pop hl
+1023+ 0680 59               ld E,C
+1024+ 0681 4D               ld C,L
+1025+ 0682 E1               pop hl
+1026+ 0683 ED 69            OUT (C),L
+1027+ 0685 4B               ld C,E
+1028+ 0686 FD E9            jp (iy)
+1029+ 0688
+1030+ 0688              truex_:
+1031+ 0688 C3 E2 03         jp true_
+1032+ 068B
+1033+ 068B              unlimit_:
+1034+ 068B 21 FE FF         ld hl,-2
+1035+ 068E 18 AE            jr else1
+1036+ 0690
+1037+ 0690              varAccess_:
+1038+ 0690 21 9C 84         ld hl,vPointer
+1039+ 0693 5E               ld e,(hl)
+1040+ 0694 23               inc hl
+1041+ 0695 56               ld d,(hl)
+1042+ 0696 D5               push de
+1043+ 0697 FD E9            jp (iy)
+1044+ 0699
+1045+ 0699              ;*******************************************************************
+1046+ 0699              ; Subroutines
+1047+ 0699              ;*******************************************************************
+1048+ 0699
+1049+ 0699              editDef:                        ; lookup up def based on number
+1050+ 0699 E1               pop hl                      ; pop ret address
+1051+ 069A E3               EX (SP),hl                  ; swap with TOS
+1052+ 069B 7D               ld a,L
+1053+ 069C 08               EX AF,AF'
+1054+ 069D 7D               ld a,l
+1055+ 069E CD 29 03         call lookupRef0
+1056+ 06A1 5E               ld E,(hl)
+1057+ 06A2 23               inc hl
+1058+ 06A3 56               ld D,(hl)
+1059+ 06A4 7A               ld a,D
+1060+ 06A5 B3               or E
+1061+ 06A6 21 00 80         ld hl,TIB
+1062+ 06A9 28 14            jr Z,editDef3
+1063+ 06AB 3E 3A            ld a,":"
+1064+ 06AD CD B8 03         call writeChar
+1065+ 06B0 08               EX AF,AF'
+1066+ 06B1 CD B8 03         call writeChar
+1067+ 06B4 18 01            jr editDef2
+1068+ 06B6              editDef1:
+1069+ 06B6 13               inc de
+1070+ 06B7              editDef2:
+1071+ 06B7 1A               ld a,(de)
+1072+ 06B8 CD B8 03         call writeChar
+1073+ 06BB FE 3B            cp ";"
+1074+ 06BD 20 F7            jr NZ,editDef1
+1075+ 06BF              editDef3:
+1076+ 06BF 11 00 80         ld de,TIB
+1077+ 06C2 B7               or A
+1078+ 06C3 ED 52            sbc hl,de
+1079+ 06C5 22 7C 84         ld (vTIBPtr),hl
+1080+ 06C8 C9               ret
+1081+ 06C9
+1082+ 06C9              ; hl = value
+1083+ 06C9              printDec:
+1084+ 06C9 CB 7C            bit 7,h
+1085+ 06CB 28 0B            jr z,printDec2
+1086+ 06CD 3E 2D            ld a,'-'
+1087+ 06CF CD 85 00         call putchar
+1088+ 06D2 AF               xor a
+1089+ 06D3 95               sub l
+1090+ 06D4 6F               ld l,a
+1091+ 06D5 9F               sbc a,a
+1092+ 06D6 94               sub h
+1093+ 06D7 67               ld h,a
+1094+ 06D8              printDec2:
+1095+ 06D8 C5               push bc
+1096+ 06D9 0E 00            ld c,0                      ; leading zeros flag = false
+1097+ 06DB 11 F0 D8         ld de,-10000
+1098+ 06DE CD FA 06         call printDec4
+1099+ 06E1 11 18 FC         ld de,-1000
+1100+ 06E4 CD FA 06         call printDec4
+1101+ 06E7 11 9C FF         ld de,-100
+1102+ 06EA CD FA 06         call printDec4
+1103+ 06ED 1E F6            ld e,-10
+1104+ 06EF CD FA 06         call printDec4
+1105+ 06F2 0C               inc c                       ; flag = true for at least digit
+1106+ 06F3 1E FF            ld e,-1
+1107+ 06F5 CD FA 06         call printDec4
+1108+ 06F8 C1               pop bc
+1109+ 06F9 C9               ret
+1110+ 06FA              printDec4:
+1111+ 06FA 06 2F            ld b,'0'-1
+1112+ 06FC              printDec5:
+1113+ 06FC 04               inc b
+1114+ 06FD 19               add hl,de
+1115+ 06FE 38 FC            jr c,printDec5
+1116+ 0700 ED 52            sbc hl,de
+1117+ 0702 3E 30            ld a,'0'
+1118+ 0704 B8               cp b
+1119+ 0705 20 05            jr nz,printDec6
+1120+ 0707 AF               xor a
+1121+ 0708 B1               or c
+1122+ 0709 C8               ret z
+1123+ 070A 18 01            jr printDec7
+1124+ 070C              printDec6:
+1125+ 070C 0C               inc c
+1126+ 070D              printDec7:
+1127+ 070D 78               ld a,b
+1128+ 070E C3 85 00         jp putchar
+1129+ 0711
+1130+ 0711              ;*******************************************************************
+1131+ 0711              ; Page 5 primitive routines continued
+1132+ 0711              ;*******************************************************************
+1133+ 0711
+1134+ 0711              def:                            ; Create a colon definition
+1135+ 0711 03               inc bc
+1136+ 0712 0A               ld  a,(bc)                  ; Get the next character
+1137+ 0713 FE 40            cp "@"                      ; is it anonymous
+1138+ 0715 20 08            jr nz,def0
+1139+ 0717 03               inc bc
+1140+ 0718 ED 5B 76 84      ld de,(vHeapPtr)            ; return start of definition
+1141+ 071C D5               push de
+1142+ 071D 18 0E            jr def1
+1143+ 071F              def0:
+1144+ 071F 32 9A 84         ld (vLastDef),a
+1145+ 0722 CD 29 03         call lookupRef0
+1146+ 0725 ED 5B 76 84      ld de,(vHeapPtr)            ; start of defintion
+1147+ 0729 73               ld (hl),E                   ; Save low byte of address in CFA
+1148+ 072A 23               inc hl
+1149+ 072B 72               ld (hl),D                   ; Save high byte of address in CFA+1
+1150+ 072C 03               inc bc
+1151+ 072D              def1:                               ; Skip to end of definition
+1152+ 072D 0A               ld a,(bc)                   ; Get the next character
+1153+ 072E 03               inc bc                      ; Point to next character
+1154+ 072F 12               ld (de),A
+1155+ 0730 13               inc de
+1156+ 0731 FE 3B            cp ";"                      ; Is it a semicolon
+1157+ 0733 28 02            jr Z, def2                  ; end the definition
+1158+ 0735 18 F6            jr  def1                    ; get the next element
+1159+ 0737              def2:
+1160+ 0737 0B               dec bc
+1161+ 0738              def3:
+1162+ 0738 ED 53 76 84      ld (vHeapPtr),de            ; bump heap ptr to after definiton
+1163+ 073C FD E9            jp (iy)
+1164+ 073E
+1165+ 073E              num:
+1166+ 073E 21 00 00     	ld hl,$0000				    ; Clear hl to accept the number
+1167+ 0741 0A           	ld a,(bc)				    ; Get numeral or -
+1168+ 0742 FE 2D            cp '-'
+1169+ 0744 20 01            jr nz,num0
+1170+ 0746 03               inc bc                      ; move to next char, no flags affected
+1171+ 0747              num0:
+1172+ 0747 08               ex af,af'                   ; save zero flag = 0 for later
+1173+ 0748              num1:
+1174+ 0748 0A               ld a,(bc)                   ; read digit
+1175+ 0749 D6 30            sub "0"                     ; less than 0?
+1176+ 074B 38 13            jr c, num2                  ; not a digit, exit loop
+1177+ 074D FE 0A            cp 10                       ; greater that 9?
+1178+ 074F 30 0F            jr nc, num2                 ; not a digit, exit loop
+1179+ 0751 03               inc bc                      ; inc IP
+1180+ 0752 54 5D            ld de,hl                    ; multiply hl * 10
+1181+ 0754 29               add hl,hl
+1182+ 0755 29               add hl,hl
+1183+ 0756 19               add hl,de
+1184+ 0757 29               add hl,hl
+1185+ 0758 85               add a,l                     ; add digit in a to hl
+1186+ 0759 6F               ld l,a
+1187+ 075A 3E 00            ld a,0
+1188+ 075C 8C               adc a,h
+1189+ 075D 67               ld h,a
+1190+ 075E 18 E8            jr num1
+1191+ 0760              num2:
+1192+ 0760 0B               dec bc
+1193+ 0761 08               ex af,af'                   ; restore zero flag
+1194+ 0762 20 07            jr nz, num3
+1195+ 0764 EB               ex de,hl                    ; negate the value of hl
+1196+ 0765 21 00 00         ld hl,0
+1197+ 0768 B7               or a                        ; jump to sub2
+1198+ 0769 ED 52            sbc hl,de
+1199+ 076B              num3:
+1200+ 076B E5               push hl                     ; Put the number on the stack
+1201+ 076C FD E9            jp (iy)                     ; and process the next character
+1202+ 076E
+1203+ 076E              arrEnd:
+1204+ 076E ED 43 02 82      ld (vTemp1),bc              ; save IP
+1205+ 0772 CD AD 03         call rpop
+1206+ 0775 22 04 82         ld (vTemp2),hl              ; save old SP
+1207+ 0778 54 5D            ld de,hl                    ; de = hl = old SP
+1208+ 077A B7               or a
+1209+ 077B ED 72            sbc hl,sp                   ; hl = array count (items on stack)
+1210+ 077D CB 3C            srl h                       ; num items = num bytes / 2
+1211+ 077F CB 1D            rr l
+1212+ 0781 44 4D            ld bc,hl                    ; bc = count
+1213+ 0783 2A 76 84         ld hl,(vHeapPtr)            ; hl = array[-4]
+1214+ 0786 71               ld (hl),c                   ; write num items in length word
+1215+ 0787 23               inc hl
+1216+ 0788 70               ld (hl),b
+1217+ 0789 23               inc hl                      ; hl = array[0], bc = count
+1218+ 078A                                              ; de = old SP, hl = array[0], bc = count
+1219+ 078A 18 11            jr arrayEnd2
+1220+ 078C              arrayEnd1:
+1221+ 078C 0B               dec bc                      ; dec items count
+1222+ 078D 1B               dec de
+1223+ 078E 1B               dec de
+1224+ 078F 1A               ld a,(de)                   ; a = lsb of stack item
+1225+ 0790 77               ld (hl),a                   ; write lsb of array item
+1226+ 0791 23               inc hl                      ; move to msb of array item
+1227+ 0792 3A 6A 84         ld a,(vByteMode)            ; vByteMode=1?
+1228+ 0795 3C               inc a
+1229+ 0796 28 05            jr z,arrayEnd2
+1230+ 0798 13               inc de
+1231+ 0799 1A               ld a,(de)                   ; a = msb of stack item
+1232+ 079A 1B               dec de
+1233+ 079B 77               ld (hl),a                   ; write msb of array item
+1234+ 079C 23               inc hl                      ; move to next word in array
+1235+ 079D              arrayEnd2:
+1236+ 079D 79               ld a,c                      ; if not zero loop
+1237+ 079E B0               or b
+1238+ 079F 20 EB            jr nz,arrayEnd1
+1239+ 07A1 EB               ex de,hl                    ; de = end of array
+1240+ 07A2 2A 04 82         ld hl,(vTemp2)
+1241+ 07A5 F9               ld sp,hl                    ; SP = old SP
+1242+ 07A6 2A 76 84         ld hl,(vHeapPtr)            ; de = array[-2]
+1243+ 07A9 23               inc hl
+1244+ 07AA 23               inc hl
+1245+ 07AB E5               push hl                     ; return array[0]
+1246+ 07AC ED 53 76 84      ld (vHeapPtr),de            ; move heap* to end of array
+1247+ 07B0 ED 4B 02 82      ld bc,(vTemp1)              ; restore IP
+1248+ 07B4 C3 D4 03         jp resetByteMode
+1249+ 07B7
+1250+ 07B7              div:
+1251+ 07B7 60 69            ld hl,bc                    ; hl = IP
+1252+ 07B9 C1               pop bc                      ; bc = denominator
+1253+ 07BA E3               ex (sp),hl                  ; save IP, hl = numerator
+1254+ 07BB 7C               ld a,h
+1255+ 07BC A8               xor b
+1256+ 07BD F5               push af
+1257+ 07BE A8               xor b
+1258+ 07BF F2 C8 07         jp p,absbc
+1259+ 07C2              ;absHL
+1260+ 07C2 AF               xor a
+1261+ 07C3 95               sub l
+1262+ 07C4 6F               ld l,a
+1263+ 07C5 9F               sbc a,a
+1264+ 07C6 94               sub h
+1265+ 07C7 67               ld h,a
+1266+ 07C8              absbc:
+1267+ 07C8 A8               xor b
+1268+ 07C9 F2 D2 07         jp p,$+9
+1269+ 07CC AF               xor a
+1270+ 07CD 91               sub c
+1271+ 07CE 4F               ld c,a
+1272+ 07CF 9F               sbc a,a
+1273+ 07D0 90               sub b
+1274+ 07D1 47               ld b,a
+1275+ 07D2 29               add hl,hl
+1276+ 07D3 3E 0F            ld a,15
+1277+ 07D5 11 00 00         ld de,0
+1278+ 07D8 EB               ex de,hl
+1279+ 07D9 18 04            jr jumpin
+1280+ 07DB              Loop1:
+1281+ 07DB 09               add hl,bc   ;--
+1282+ 07DC              Loop2:
+1283+ 07DC 3D               dec a       ;4
+1284+ 07DD 28 0E            jr z,EndSDiv ;12|7
+1285+ 07DF              jumpin:
+1286+ 07DF CB 23            sla e       ;8
+1287+ 07E1 CB 12            rl d        ;8
+1288+ 07E3 ED 6A            adc hl,hl   ;15
+1289+ 07E5 ED 42            sbc hl,bc   ;15
+1290+ 07E7 38 F2            jr c,Loop1  ;23-2b
+1291+ 07E9 1C               inc e       ;--
+1292+ 07EA C3 DC 07         jp Loop2    ;--
+1293+ 07ED              EndSDiv:
+1294+ 07ED F1               pop af
+1295+ 07EE F2 F7 07         jp p,div10
+1296+ 07F1 AF               xor a
+1297+ 07F2 93               sub e
+1298+ 07F3 5F               ld e,a
+1299+ 07F4 9F               sbc a,a
+1300+ 07F5 92               sub d
+1301+ 07F6 57               ld d,a
+1302+ 07F7              div10:
+1303+ 07F7 C1               pop bc
+1304+ 07F8              divExit:
+1305+ 07F8 D5               push de                     ; quotient
+1306+ 07F9 22 8A 84         ld (vRemain),hl             ; remainder
+1307+ 07FC FD E9            jp (iy)
+1308+ 07FE
+1309+ 07FE              ; *******************************************************************************
+1310+ 07FE              ; *********  END OF MAIN   ******************************************************
 1311+ 07FE              ; *******************************************************************************
-1312+ 07FE
+1312+ 07FE              ; *******************************************************************************
+1313+ 07FE
 # file closed: MAIN.asm
-   9  07FE              .include "ram.asm"
+  16  07FE              .include "ram.asm"
 # file opened: ram.asm
    1+ 07FE              DSIZE       EQU $80
    2+ 07FE              RSIZE       EQU $80
@@ -2057,5 +2119,5 @@
   74+ 84A0              HEAP:
   75+ 84A0
 # file closed: ram.asm
-  10  84A0
+  17  84A0
 # file closed: BeanZee.z80
