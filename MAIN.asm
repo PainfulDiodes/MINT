@@ -23,11 +23,11 @@
 
     BSLASH      equ $5c
 
-.macro LITDAT,len
+.macro LITDAT len
     db len
 .endm
 
-.macro REPDAT,len,data			; compress the command tables
+.macro REPDAT len,data			; compress the command tables
     
     db (len | $80)
     db data
