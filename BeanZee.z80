@@ -1,3 +1,5 @@
+OUTPUT "BeanZee.z80.bin"
+
 .include "constants.asm"
 .include "IOSerial.asm"
 
