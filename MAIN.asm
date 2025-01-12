@@ -149,7 +149,7 @@ backSpace:
     jr interpret2
     
 start:
-    ld SP,DSTACK		; start of MINT
+    ld SP,dStack		; start of MINT
     call init		    ; setups
     call printStr		; prog count to stack, put code line 235 on stack then call print
     db "MINT2.0\r\n",0
@@ -207,7 +207,7 @@ waitchar:
 macro:                          
     ld (vTIBPtr),bc
     push de
-    call ENTER		;mint go operation and jump to it
+    call enter		;mint go operation and jump to it
     db "/G",0
     ld bc,(vTIBPtr)
     jr interpret2
@@ -266,15 +266,15 @@ exit:
     jp (hl)
 
 etx:                                
-    ld hl,-DSTACK               ; check if stack pointer is underwater
+    ld hl,-dStack               ; check if stack pointer is underwater
     add hl,SP
     jr NC,etx1
-    ld SP,DSTACK
+    ld SP,dStack
 etx1:
     jp interpret
 
 init:                           
-    ld IX,RSTACK
+    ld IX,rStack
     ld IY,NEXT		; IY provides a faster jump to NEXT
 
     ld hl,vars              
@@ -586,7 +586,7 @@ dot_:
     call printDec
 dot2:
     ld a,' '           
-    call putChar
+    call putchar
     jp (iy)
 
 comma_:                          ; print hexadecimal
@@ -860,7 +860,7 @@ loopStart3:
     call rpush                  ; rpush limit
     ld hl,-1                    ; hl = count = -1 
     call rpush                  ; rpush count
-loopstart4:    
+loopStart4:    
     jp (iy)
     
 again:
@@ -944,7 +944,7 @@ depth:
     ld hl,0
     add hl,SP
     EX de,hl
-    ld hl,DSTACK
+    ld hl,dStack
     or A
     sbc hl,de
     jp shr1
