@@ -53,13 +53,13 @@ reedit_:
     db "/z/Z;"			; remembers last line edited
 
 edit_:
-    .cstr "`?`/K/P/Z;"
+    db "`?`/K/P/Z;",0
 
 list_:
-    .cstr "/N26(/i65+/Z/k0>(/N))/P;"
+    db "/N26(/i65+/Z/k0>(/N))/P;",0
 
 printStack_:
-    .cstr "`=> `/s2- /D1-(",$22,",2-)'/N/P;"        
+    db "`=> `/s2- /D1-(",$22,",2-)'/N/P;",0        
 
 iOpcodes:
     LITDAT 15
@@ -145,14 +145,14 @@ backSpace:
     jr z, interpret2
     dec bc
     call printStr
-    .cstr "\b \b"
+    db "\b \b",0
     jr interpret2
     
 start:
     ld SP,DSTACK		; start of MINT
     call init		    ; setups
     call printStr		; prog count to stack, put code line 235 on stack then call print
-    .cstr "MINT2.0\r\n"
+    db "MINT2.0\r\n",0
 
 interpret:
     call prompt
@@ -208,7 +208,7 @@ macro:
     ld (vTIBPtr),bc
     push de
     call ENTER		;mint go operation and jump to it
-    .cstr "/G"
+    db "/G",0
     ld bc,(vTIBPtr)
     jr interpret2
 
@@ -403,12 +403,12 @@ nesting4:
 
 prompt:                            
     call printStr
-    .cstr "\r\n> "
+    db "\r\n> ",0
     ret
 
 crlf:                               
     call printStr
-    .cstr "\r\n"
+    db "\r\n",0
     ret
 
 printStr:                           
