@@ -4,8 +4,8 @@
         ; Memory Map: 2k ROM/RAM, 8K ROM/RAM, RC2014
         ; Serial: Bit Bang, 6850 ACIA
         
- .if  TEC_1
- .if  BITBANG
+.if  TEC_1
+.if  BITBANG
 
         ; bit bang baud rate constants @ 4MHz
         B300:	.EQU	0220H
@@ -14,7 +14,7 @@
         B4800:	.EQU	001BH
         B9600:	.EQU	000BH
 
- .else ;6850
+.else ;6850
 
         ;
         ; 6850 ACIA registers
@@ -67,10 +67,10 @@
         PE     .EQU   6          ;parity error
         IRQ    .EQU   7          ;interrupt request
 
- .endif
- .endif
+.endif
+.endif
 
- .if BEANZEE
+.if BEANZEE
 
         ;
         ; USB registers
@@ -85,12 +85,12 @@ USB_DATA       .EQU      $01   ;(read/write)
         ;RXF    .EQU   1          ;receive data register full
         ; Using these with bit operations assembles as NOP ???
 
- .endif
+.endif
 
 
 ; I/O port addresses
 
- .if TEC_1
+.if TEC_1
         KEYBUF:      .EQU 00H             ;MM74C923N KEYBOARD ENCODER
         SCAN:        .EQU 01H             ;DISPLAY SCAN LATCH
         DISPLY:      .EQU 02H             ;DISPLAY LATCH
@@ -99,8 +99,8 @@ USB_DATA       .EQU      $01   ;(read/write)
         PORT5:       .EQU 05H
         PORT6:       .EQU 06H
         PORT7:       .EQU 07H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
- .endif
- .if RC2014
+.endif
+.if RC2014
         IO0:         .EQU 80H             ;IO PORT 0
         IO1:         .EQU 81H             ;IO PORT 1
         IO2:         .EQU 82H             ;IO PORT 2
@@ -109,7 +109,7 @@ USB_DATA       .EQU      $01   ;(read/write)
         SCAN:        .EQU 85H             ;DISPLAY SCAN LATCH
         KEYBUF:      .EQU 86H             ;KEYBOARD BUFFER
         IO7:         .EQU 87H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
- .endif
+.endif
 
 ; ASCII codes
 ESC:     .EQU   1BH
@@ -162,35 +162,35 @@ rst6:
     	PADORG	ROMSTART+$38
     	.ORG	ROMSTART+$38
 
- .if  BITBANG
+.if  BITBANG
 
     	ld l,7
     	jp ISR
- .else 
+.else 
 
         ret
 
- .endif
+.endif
 
         PADORG  ROMSTART+$40
         .ORG    ROMSTART+$40
 
 ;hexadecimal to 7 segment display code table
- .if TEC_1
+.if TEC_1
 
 sevensegment:
             .DB 0EBH,28H,0CDH,0ADH ;0,1,2,3
             .DB 2EH,0A7H,0E7H,29H ;4,5,6,7
             .DB 0EFH,2FH,6FH,0E6H ;8,9,A,B
             .DB 0C3H,0ECH,0C7H,47H ;C,D,E,F
- .else ;SC
+.else ;SC
 
 sevensegment:
             .DB 3FH,06H,5BH,4FH ;0,1,2,3
             .DB 66H,6DH,7DH,07H ;4,5,6,7
             .DB 7FH,6FH,77H,7CH ;8,9,A,B
             .DB 39H,5EH,79H,71H ;C,D,E,F
- .endif
+.endif
 
 
 ;---------------
@@ -224,8 +224,8 @@ IntRet:
     	ld l,8
     	jp ISR
 
- .if  TEC_1
- .if  BITBANG
+.if  TEC_1
+.if  BITBANG
 
 ;------------------------
 ; SERIAL TRANSMIT ROUTINE
@@ -319,7 +319,7 @@ RXDAT2:
     POP	BC
 	RET
     
- .else ;6850
+.else ;6850
 ;
 ; transmit a character in a
 ;--------------------------
@@ -347,10 +347,10 @@ RxChar:
         jr    z,RxChar           ;no, the RDR is empty
         in    a,(RDR)            ;yes, read the received char
         ret
- .endif
- .endif
+.endif
+.endif
 
- .if BEANZEE
+.if BEANZEE
 ;
 ; transmit a character in a
 ;--------------------------
@@ -377,10 +377,10 @@ RxChar:
         in    a,(USB_DATA)          ;yes, read the received char
         ret
 
- .endif
+.endif
 
 
- .if LOADER
+.if LOADER
     ;   .ORG   ROMSTART + $0700
 ;-----------------------
 ; RECEIVE INTEL HEX FILE
@@ -479,11 +479,11 @@ GETBT2	AND	0FH
 	AND	A	;CLEAR CARRY
     POP	BC
 	RET
- .endif
+.endif
 
 ; in this example code just wait for an INTEL Hex file download
 ;just going to send a char to let you know I'm here
- .if LOADER
+.if LOADER
 
 Load:  
         ld     a,'L'  ; L for load
@@ -493,7 +493,7 @@ Load:
         ld   a,'0'   ;0 is false
         call TxChar
         jr   load    ;if at first you don't succeed...
- .endif
+.endif
 
 getchar:
         LD HL,(GETCVEC)
@@ -529,21 +529,21 @@ RESET:
         LD HL,TXDATA
         LD (PUTCVEC),HL
 
- .if TEC_1
- .if BITBANG = 0
+.if TEC_1
+.if BITBANG = 0
 
         ld    a,MRESET
         out   (CONTROL),a           ;reset the ACIA
 
- .endif
- .endif
+.endif
+.endif
 
         call PWRUP
         IM  1
         EI
 
- .if TEC_1
- .if BITBANG
+.if TEC_1
+.if BITBANG
 
 ;inline serial initialisation
         LD    A,$40
@@ -552,13 +552,13 @@ RESET:
         LD    HL,B4800
         LD    (BAUD),HL
 
- .else ;6850      
+.else ;6850      
 
         ld     a,RTSLID+F8N2+DIV_64
         out   (CONTROL),a           ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
 
- .endif
- .endif
+.endif
+.endif
         
 
         
