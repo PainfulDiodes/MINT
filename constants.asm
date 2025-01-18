@@ -1,9 +1,3 @@
-TEC_1 EQU 0
-RC2014 EQU 0
-BEANZEE EQU 1
-
-EXTENDED EQU 0
-
 .if RC2014
 
 ; Configuration for RC2014

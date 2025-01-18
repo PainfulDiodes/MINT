@@ -5,7 +5,13 @@ MACRO PADORG addr
     ORG addr
 ENDM
 
-OUTPUT "BeanZee.z80.bin"
+OUTPUT ".bin"
+
+TEC_1 EQU 0
+RC2014 EQU 0
+BEANZEE EQU 1
+
+EXTENDED EQU 0
 
 .include "constants.asm"
 .include "IOSerial.asm"

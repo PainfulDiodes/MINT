@@ -8,64 +8,64 @@
 .if  BITBANG
 
         ; bit bang baud rate constants @ 4MHz
-        B300:	.EQU	0220H
-        B1200:	.EQU	0080H
-        B2400:	.EQU	003FH
-        B4800:	.EQU	001BH
-        B9600:	.EQU	000BH
+B300:	.EQU	0220H
+B1200:	.EQU	0080H
+B2400:	.EQU	003FH
+B4800:	.EQU	001BH
+B9600:	.EQU	000BH
 
 .else ;6850
 
         ;
         ; 6850 ACIA registers
         ;----------------------
-        CONTROL         .EQU      $80   ;(write) 
-        STATUS          .EQU      $80   ;(read)
-        TDR             .EQU      $81   ;(write)
-        RDR             .EQU      $81   ;(read)
+CONTROL         .EQU      $80   ;(write) 
+STATUS          .EQU      $80   ;(read)
+TDR             .EQU      $81   ;(write)
+RDR             .EQU      $81   ;(read)
         ;
         ; control register bits
         ;----------------------
         ;
         ;clock divisor
         ;
-        MRESET  .EQU  $03        ;master reset the ACIA
+MRESET  .EQU  $03        ;master reset the ACIA
         ; DIV_0    .EQU  $00        ;CLOCK/1
         ; DIV_16   .EQU  $01        ;CLOCK/16
-        DIV_64   .EQU  $02        ;CLOCK/64
+DIV_64   .EQU  $02        ;CLOCK/64
         ;
         ; format select
         ;
-        F7E2    .EQU   $00        ;7 data bits, EVEN parity, 2 stop bits (1+7+1+2= 11 bits)
-        F7O2    .EQU   $04        ;7 data bits, ODD parity, 2 stop bits (1+7+1+2= 11 bits)
-        F7E1    .EQU   $08        ;7 data bits, EVEN parity, 1 stop bit (1+7+1+1= 10 bits)
-        F7O1    .EQU   $0C        ;7 data bits, ODD parity, 1 stop bit (1+7+1+1= 10 bits)
-        F8N2    .EQU   $10        ;8 data bits, NO parity, 2 stop bits (1+8+0+2= 11 bits)
-        F8N1    .EQU   $14        ;8 data bits, NO parity, 1 stop bit (1+8+0+1= 10 bits)
-        F8E1    .EQU   $18        ;8 data bits, EVEN parity, 1 stop bit (1+8+1+1= 11 bits)
-        F8O1    .EQU   $1C        ;8 data bits, ODD parity,1 stop bit (1+8+1+1= 11 bits)
+F7E2    .EQU   $00        ;7 data bits, EVEN parity, 2 stop bits (1+7+1+2= 11 bits)
+F7O2    .EQU   $04        ;7 data bits, ODD parity, 2 stop bits (1+7+1+2= 11 bits)
+F7E1    .EQU   $08        ;7 data bits, EVEN parity, 1 stop bit (1+7+1+1= 10 bits)
+F7O1    .EQU   $0C        ;7 data bits, ODD parity, 1 stop bit (1+7+1+1= 10 bits)
+F8N2    .EQU   $10        ;8 data bits, NO parity, 2 stop bits (1+8+0+2= 11 bits)
+F8N1    .EQU   $14        ;8 data bits, NO parity, 1 stop bit (1+8+0+1= 10 bits)
+F8E1    .EQU   $18        ;8 data bits, EVEN parity, 1 stop bit (1+8+1+1= 11 bits)
+F8O1    .EQU   $1C        ;8 data bits, ODD parity,1 stop bit (1+8+1+1= 11 bits)
         ;
         ; transmitter control
         ;
-        RTSLID .EQU   $00        ;RTS LOW, transmit interrupt disabled
-        RTSLIE .EQU   $20        ;RTS LOW, transmit interrupt enabled
-        RTSHID .EQU   $40        ;RTS HIGH, transmit interrupt disabled
-        RTSLIDB .EQU  $60        ;RTS LOW, transmit interrupt disabled and 'break' transmitted
+RTSLID .EQU   $00        ;RTS LOW, transmit interrupt disabled
+RTSLIE .EQU   $20        ;RTS LOW, transmit interrupt enabled
+RTSHID .EQU   $40        ;RTS HIGH, transmit interrupt disabled
+RTSLIDB .EQU  $60        ;RTS LOW, transmit interrupt disabled and 'break' transmitted
         ;
         ; receiver interrupt
         ;
-        RIE    .EQU   $80        ;receiver interrupt enabled
+RIE    .EQU   $80        ;receiver interrupt enabled
         ;
         ; status register bits
         ;---------------------
-        RDRF   .EQU   0          ;receive data register full
-        TDRE   .EQU   1          ;transmit data register empty
-        DCD    .EQU   2          ;data carrier detect
-        CTS    .EQU   3          ;clear to send
-        FE     .EQU   4          ;framing error
-        OVRN   .EQU   5          ;overrun
-        PE     .EQU   6          ;parity error
-        IRQ    .EQU   7          ;interrupt request
+RDRF   .EQU   0          ;receive data register full
+TDRE   .EQU   1          ;transmit data register empty
+DCD    .EQU   2          ;data carrier detect
+CTS    .EQU   3          ;clear to send
+FE     .EQU   4          ;framing error
+OVRN   .EQU   5          ;overrun
+PE     .EQU   6          ;parity error
+IRQ    .EQU   7          ;interrupt request
 
 .endif
 .endif
@@ -91,24 +91,25 @@ USB_DATA       .EQU      $01   ;(read/write)
 ; I/O port addresses
 
 .if TEC_1
-        KEYBUF:      .EQU 00H             ;MM74C923N KEYBOARD ENCODER
-        SCAN:        .EQU 01H             ;DISPLAY SCAN LATCH
-        DISPLY:      .EQU 02H             ;DISPLAY LATCH
-        PORT3:       .EQU 03H             ;ST3 (8X8), STROBE (RELAY BOARD) DATLATCH (DAT BOARD)
-        PORT4:       .EQU 04H             ;ST4 (8X8), LCD 'E' (DAT BOARD)
-        PORT5:       .EQU 05H
-        PORT6:       .EQU 06H
-        PORT7:       .EQU 07H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
+KEYBUF:      .EQU 00H             ;MM74C923N KEYBOARD ENCODER
+SCAN:        .EQU 01H             ;DISPLAY SCAN LATCH
+DISPLY:      .EQU 02H             ;DISPLAY LATCH
+PORT3:       .EQU 03H             ;ST3 (8X8), STROBE (RELAY BOARD) DATLATCH (DAT BOARD)
+PORT4:       .EQU 04H             ;ST4 (8X8), LCD 'E' (DAT BOARD)
+PORT5:       .EQU 05H
+PORT6:       .EQU 06H
+PORT7:       .EQU 07H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
 .endif
+
 .if RC2014
-        IO0:         .EQU 80H             ;IO PORT 0
-        IO1:         .EQU 81H             ;IO PORT 1
-        IO2:         .EQU 82H             ;IO PORT 2
-        IO3:         .EQU 83H             ;IO PORT 3
-        DISPLY:      .EQU 84H             ;DISPLAY LATCH
-        SCAN:        .EQU 85H             ;DISPLAY SCAN LATCH
-        KEYBUF:      .EQU 86H             ;KEYBOARD BUFFER
-        IO7:         .EQU 87H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
+IO0:         .EQU 80H             ;IO PORT 0
+IO1:         .EQU 81H             ;IO PORT 1
+IO2:         .EQU 82H             ;IO PORT 2
+IO3:         .EQU 83H             ;IO PORT 3
+DISPLY:      .EQU 84H             ;DISPLAY LATCH
+SCAN:        .EQU 85H             ;DISPLAY SCAN LATCH
+KEYBUF:      .EQU 86H             ;KEYBOARD BUFFER
+IO7:         .EQU 87H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
 .endif
 
 ; ASCII codes
@@ -255,7 +256,7 @@ TXDATA:
 	LD	B,08H
 	RRC	C
 NXTBIT:	
-    RRC	C	;SHIFT BITS TO D6,
+        RRC	C	;SHIFT BITS TO D6,
 	LD	A,C	;LSB FIRST AND OUTPUT
 	AND	40H	;THEM FOR ONE BIT TIME.
 	OUT	(SCAN),A
@@ -264,10 +265,10 @@ NXTBIT:
 ;
 ; SEND STOP BITS
 ;
-    LD	A,40H
-    OUT	(SCAN),A
-    CALL  BITIME
-    CALL	BITIME
+        LD	A,40H
+        OUT	(SCAN),A
+        CALL    BITIME
+        CALL	BITIME
 	POP	HL
 	POP	BC
 	POP	AF
@@ -290,8 +291,8 @@ RXDATA:
 ; WAIT FOR START BIT 
 ;
 RXDAT1: IN	A,(KEYBUF)
-	    BIT	7,A
-	    JR	NZ,RXDAT1	;NO START BIT
+	BIT	7,A
+	JR	NZ,RXDAT1	;NO START BIT
 ;
 ; DETECTED START BIT
 ;
@@ -307,7 +308,7 @@ RXDAT1: IN	A,(KEYBUF)
 ;
 	LD	B,08H
 RXDAT2:	
-    LD	HL,(BAUD)
+        LD	HL,(BAUD)
 	CALL	BITIME	;DELAY ONE BIT TIME
 	IN	A,(KEYBUF)
 	RL	A
@@ -315,8 +316,8 @@ RXDAT2:
 	DJNZ	RXDAT2
 	LD	A,C
 	OR	A	;CLEAR CARRY FLAG
-    POP	HL
-    POP	BC
+        POP	HL
+        POP	BC
 	RET
     
 .else ;6850
@@ -391,7 +392,7 @@ INTELH:
 ; WAIT FOR RECORD MARK
 ;
 INTEL1:	
-    XOR	A
+        XOR	A
 	LD	(IX+3),A	;CLEAR CHECKSUM
 	CALL	RXDATA	;WAIT FOR THE RECORD MARK
 	CP	':'	;TO BE TRANSMITTED
@@ -421,7 +422,7 @@ INTEL1:
 	LD	L,(IX+1)	;LOAD ADDRESS LOW BYTE
 
 INTEL2:	
-    CALL	GETBYT	;GET DATA BYTE
+        CALL	GETBYT	;GET DATA BYTE
 	LD	(HL),A	;STORE DATA BYTE
 	INC	HL
 	DJNZ	INTEL2	;LOAD MORE BYTES
@@ -429,24 +430,24 @@ INTEL2:
 ; GET CHECKSUM AND COMPARE
 ;
 	LD	A,(IX+3)	;CONVERT CHECKSUM TO
-	NEG		;TWO'S COMPLEMENT
+	NEG		        ;TWO'S COMPLEMENT
 	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
 	CALL	GETBYT
 	LD	(IX+3),A	;SAVE RECORD CHECKSUM
-	CP	(IX+4)	;COMPARE CHECKSUM
+	CP	(IX+4)	        ;COMPARE CHECKSUM
 	JR	Z,INTEL1	;CHECKSUM OK,NEXT RECORD
-    RET             ;NZ=CHECKSUM ERROR
+        RET                     ;NZ=CHECKSUM ERROR
 ;
 ; END OF FILE RECORD
 ;
 INTEL4:	
-    LD	A,(IX+3)	;CONVERT CHECKSUM TO
-	NEG		;TWO'S COMPLEMENT
+    LD	A,(IX+3)	        ;CONVERT CHECKSUM TO
+	NEG		        ;TWO'S COMPLEMENT
 	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
 	CALL	GETBYT
 	LD	(IX+3),A	;SAVE EOF CHECKSUM
-	CP	(IX+4)	;COMPARE CHECKSUM
-	RET  	    ;NZ=CHECKSUM ERROR
+	CP	(IX+4)	        ;COMPARE CHECKSUM
+	RET  	                ;NZ=CHECKSUM ERROR
 ;--------------------------
 ; GET BYTE FROM SERIAL PORT
 ;--------------------------
@@ -476,7 +477,7 @@ GETBT2	AND	0FH
 	ADD	A,(IX+3)
 	LD	(IX+3),A	;ADD TO CHECKSUM
 	LD	A,B
-	AND	A	;CLEAR CARRY
+	AND	A	        ;CLEAR CARRY
     POP	BC
 	RET
 .endif
@@ -492,7 +493,7 @@ Load:
         jp   z,RAMSTART          ;assume the downloaded code starts here
         ld   a,'0'   ;0 is false
         call TxChar
-        jr   load    ;if at first you don't succeed...
+        jr   Load    ;if at first you don't succeed...
 .endif
 
 getchar:

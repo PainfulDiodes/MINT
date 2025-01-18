@@ -1,4 +1,17 @@
-.engine mycomputer
+MACRO PADORG addr
+    IF $ < addr
+    BLOCK addr-$
+    ENDIF
+    ORG addr
+ENDM
+
+OUTPUT ".bin"
+
+TEC_1 EQU 1
+RC2014 EQU 0
+BEANZEE EQU 0
+
+EXTENDED EQU 0
 
 .include "constants.asm"
 .include "IOSerial.asm"
