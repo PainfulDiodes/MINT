@@ -6,58 +6,58 @@
    5  0000 ~                ORG addr
    6  0000              ENDM
    7  0000
-   8  0000              OUTPUT "BeanZee.z80.bin"
+   8  0000              OUTPUT ".bin"
    9  0000
-  10  0000              .include "constants.asm"
+  10  0000              TEC_1 EQU 0
+  11  0000              RC2014 EQU 0
+  12  0000              BEANZEE EQU 1
+  13  0000
+  14  0000              EXTENDED EQU 0
+  15  0000
+  16  0000              .include "constants.asm"
 # file opened: constants.asm
-   1+ 0000              TEC_1 EQU 0
-   2+ 0000              RC2014 EQU 0
-   3+ 0000              BEANZEE EQU 1
-   4+ 0000
-   5+ 0000              EXTENDED EQU 0
-   6+ 0000
-   7+ 0000              .if RC2014
-   8+ 0000 ~
-   9+ 0000 ~            ; Configuration for RC2014
-  10+ 0000 ~
-  11+ 0000 ~            ROMSTART    EQU $8000
-  12+ 0000 ~            RAMSTART    EQU $8800
-  13+ 0000 ~            LOADER EQU 0
-  14+ 0000 ~            BITBANG EQU 0
-  15+ 0000 ~
-  16+ 0000              .endif
-  17+ 0000
-  18+ 0000              .if TEC_1
-  19+ 0000 ~
-  20+ 0000 ~            ; Configuration for TEC-1
-  21+ 0000 ~            LOADER EQU 0
-  22+ 0000 ~            BITBANG EQU 0
-  23+ 0000 ~
-  24+ 0000 ~            ROMSTART    EQU $0000
-  25+ 0000 ~            RAMSTART    EQU $0800
-  26+ 0000 ~            ROMSIZE     EQU $0800
-  27+ 0000 ~            RAMSIZE     EQU $0800
+   1+ 0000              .if RC2014
+   2+ 0000 ~
+   3+ 0000 ~            ; Configuration for RC2014
+   4+ 0000 ~
+   5+ 0000 ~            ROMSTART    EQU $8000
+   6+ 0000 ~            RAMSTART    EQU $8800
+   7+ 0000 ~            LOADER EQU 0
+   8+ 0000 ~            BITBANG EQU 0
+   9+ 0000 ~
+  10+ 0000              .endif
+  11+ 0000
+  12+ 0000              .if TEC_1
+  13+ 0000 ~
+  14+ 0000 ~            ; Configuration for TEC-1
+  15+ 0000 ~            LOADER EQU 0
+  16+ 0000 ~            BITBANG EQU 0
+  17+ 0000 ~
+  18+ 0000 ~            ROMSTART    EQU $0000
+  19+ 0000 ~            RAMSTART    EQU $0800
+  20+ 0000 ~            ROMSIZE     EQU $0800
+  21+ 0000 ~            RAMSIZE     EQU $0800
+  22+ 0000 ~
+  23+ 0000 ~            ;TEC-1D SC 8k rom/ram
+  24+ 0000 ~            ; ROMSTART .equ $0000
+  25+ 0000 ~            ; RAMSTART .equ $2000
+  26+ 0000 ~            ; ROMSIZE  .equ 8192
+  27+ 0000 ~            ; RAMSIZE  .equ 8192
   28+ 0000 ~
-  29+ 0000 ~            ;TEC-1D SC 8k rom/ram
-  30+ 0000 ~            ; ROMSTART .equ $0000
-  31+ 0000 ~            ; RAMSTART .equ $2000
-  32+ 0000 ~            ; ROMSIZE  .equ 8192
-  33+ 0000 ~            ; RAMSIZE  .equ 8192
-  34+ 0000 ~
-  35+ 0000              .endif
-  36+ 0000
-  37+ 0000              .if BEANZEE
+  29+ 0000              .endif
+  30+ 0000
+  31+ 0000              .if BEANZEE
+  32+ 0000
+  33+ 0000              ; Configuration for BeanZee
+  34+ 0000              ROMSTART    EQU $0000
+  35+ 0000              RAMSTART    EQU $8000
+  36+ 0000              LOADER EQU 0
+  37+ 0000              BITBANG EQU 0
   38+ 0000
-  39+ 0000              ; Configuration for BeanZee
-  40+ 0000              ROMSTART    EQU $0000
-  41+ 0000              RAMSTART    EQU $8000
-  42+ 0000              LOADER EQU 0
-  43+ 0000              BITBANG EQU 0
-  44+ 0000
-  45+ 0000              .endif
-  46+ 0000
+  39+ 0000              .endif
+  40+ 0000
 # file closed: constants.asm
-  11  0000              .include "IOSerial.asm"
+  17  0000              .include "IOSerial.asm"
 # file opened: IOSerial.asm
    1+ 0000                      ; ROM code
    2+ 0000                      ; Targets:
@@ -69,69 +69,64 @@
    8+ 0000 ~            .if  BITBANG
    9+ 0000 ~
   10+ 0000 ~                    ; bit bang baud rate constants @ 4MHz
-  11+ 0000 ~                    B300
-  11+ 0000 ~             	.EQU	0220H
-  12+ 0000 ~                    B1200
-  12+ 0000 ~             	.EQU	0080H
-  13+ 0000 ~                    B2400
-  13+ 0000 ~             	.EQU	003FH
-  14+ 0000 ~                    B4800
-  14+ 0000 ~             	.EQU	001BH
-  15+ 0000 ~                    B9600
-  15+ 0000 ~             	.EQU	000BH
+  11+ 0000 ~            B300:	.EQU	0220H
+  12+ 0000 ~            B1200:	.EQU	0080H
+  13+ 0000 ~            B2400:	.EQU	003FH
+  14+ 0000 ~            B4800:	.EQU	001BH
+  15+ 0000 ~            B9600:	.EQU	000BH
   16+ 0000 ~
   17+ 0000 ~            .else ;6850
   18+ 0000 ~
   19+ 0000 ~                    ;
   20+ 0000 ~                    ; 6850 ACIA registers
   21+ 0000 ~                    ;----------------------
-  22+ 0000 ~                    CONTROL         .EQU      $80   ;(write)
-  23+ 0000 ~                    STATUS          .EQU      $80   ;(read)
-  24+ 0000 ~                    TDR             .EQU      $81   ;(write)
-  25+ 0000 ~                    RDR             .EQU      $81   ;(read)
+  22+ 0000 ~            CONTROL         .EQU      $80   ;(write)
+  23+ 0000 ~            STATUS          .EQU      $80   ;(read)
+  24+ 0000 ~            TDR             .EQU      $81   ;(write)
+  25+ 0000 ~            RDR             .EQU      $81   ;(read)
   26+ 0000 ~                    ;
   27+ 0000 ~                    ; control register bits
   28+ 0000 ~                    ;----------------------
   29+ 0000 ~                    ;
   30+ 0000 ~                    ;clock divisor
   31+ 0000 ~                    ;
-  32+ 0000 ~                    MRESET  .EQU  $03        ;master reset the ACIA
+  32+ 0000 ~            MRESET  .EQU  $03        ;master reset the ACIA
   33+ 0000 ~                    ; DIV_0    .EQU  $00        ;CLOCK/1
   34+ 0000 ~                    ; DIV_16   .EQU  $01        ;CLOCK/16
-  35+ 0000 ~                    DIV_64   .EQU  $02        ;CLOCK/64
+  35+ 0000 ~            DIV_64   .EQU  $02        ;CLOCK/64
   36+ 0000 ~                    ;
   37+ 0000 ~                    ; format select
   38+ 0000 ~                    ;
-  39+ 0000 ~                    F7E2    .EQU   $00        ;7 data bits, EVEN parity, 2 stop bits (1+7+1+2= 11 bits)
-  40+ 0000 ~                    F7O2    .EQU   $04        ;7 data bits, ODD parity, 2 stop bits (1+7+1+2= 11 bits)
-  41+ 0000 ~                    F7E1    .EQU   $08        ;7 data bits, EVEN parity, 1 stop bit (1+7+1+1= 10 bits)
-  42+ 0000 ~                    F7O1    .EQU   $0C        ;7 data bits, ODD parity, 1 stop bit (1+7+1+1= 10 bits)
-  43+ 0000 ~                    F8N2    .EQU   $10        ;8 data bits, NO parity, 2 stop bits (1+8+0+2= 11 bits)
-  44+ 0000 ~                    F8N1    .EQU   $14        ;8 data bits, NO parity, 1 stop bit (1+8+0+1= 10 bits)
-  45+ 0000 ~                    F8E1    .EQU   $18        ;8 data bits, EVEN parity, 1 stop bit (1+8+1+1= 11 bits)
-  46+ 0000 ~                    F8O1    .EQU   $1C        ;8 data bits, ODD parity,1 stop bit (1+8+1+1= 11 bits)
+  39+ 0000 ~            F7E2    .EQU   $00        ;7 data bits, EVEN parity, 2 stop bits (1+7+1+2= 11 bits)
+  40+ 0000 ~            F7O2    .EQU   $04        ;7 data bits, ODD parity, 2 stop bits (1+7+1+2= 11 bits)
+  41+ 0000 ~            F7E1    .EQU   $08        ;7 data bits, EVEN parity, 1 stop bit (1+7+1+1= 10 bits)
+  42+ 0000 ~            F7O1    .EQU   $0C        ;7 data bits, ODD parity, 1 stop bit (1+7+1+1= 10 bits)
+  43+ 0000 ~            F8N2    .EQU   $10        ;8 data bits, NO parity, 2 stop bits (1+8+0+2= 11 bits)
+  44+ 0000 ~            F8N1    .EQU   $14        ;8 data bits, NO parity, 1 stop bit (1+8+0+1= 10 bits)
+  45+ 0000 ~            F8E1    .EQU   $18        ;8 data bits, EVEN parity, 1 stop bit (1+8+1+1= 11 bits)
+  46+ 0000 ~            F8O1    .EQU   $1C        ;8 data bits, ODD parity,1 stop bit (1+8+1+1= 11 bits)
   47+ 0000 ~                    ;
   48+ 0000 ~                    ; transmitter control
   49+ 0000 ~                    ;
-  50+ 0000 ~                    RTSLID .EQU   $00        ;RTS LOW, transmit interrupt disabled
-  51+ 0000 ~                    RTSLIE .EQU   $20        ;RTS LOW, transmit interrupt enabled
-  52+ 0000 ~                    RTSHID .EQU   $40        ;RTS HIGH, transmit interrupt disabled
-  53+ 0000 ~                    RTSLIDB .EQU  $60        ;RTS LOW, transmit interrupt disabled and 'break' transmitted
+  50+ 0000 ~            RTSLID .EQU   $00        ;RTS LOW, transmit interrupt disabled
+  51+ 0000 ~            RTSLIE .EQU   $20        ;RTS LOW, transmit interrupt enabled
+  52+ 0000 ~            RTSHID .EQU   $40        ;RTS HIGH, transmit interrupt disabled
+  53+ 0000 ~            RTSLIDB .EQU  $60        ;RTS LOW, transmit interrupt disabled and 'break' transmitted
   54+ 0000 ~                    ;
   55+ 0000 ~                    ; receiver interrupt
   56+ 0000 ~                    ;
-  57+ 0000 ~                    RIE    .EQU   $80        ;receiver interrupt enabled
+  57+ 0000 ~            RIE    .EQU   $80        ;receiver interrupt enabled
   58+ 0000 ~                    ;
   59+ 0000 ~                    ; status register bits
   60+ 0000 ~                    ;---------------------
-  61+ 0000 ~                    RDRF   .EQU   0          ;receive data register full
-  62+ 0000 ~                    TDRE   .EQU   1          ;transmit data register empty
-  63+ 0000 ~                    DCD    .EQU   2          ;data carrier detect
-  64+ 0000 ~                    CTS    .EQU   3          ;clear to send
-  65+ 0000 ~                    FE     .EQU   4          ;framing error
-  66+ 0000 ~                    OVRN   .EQU   5          ;overrun
-  67+ 0000 ~                    PE     .EQU   6          ;parity error
-  68+ 0000 ~                    IRQ    .EQU   7          ;interrupt request
+  61+ 0000 ~            RDRF   .EQU   0          ;receive data register full
+  62+ 0000 ~            TDRE   .EQU   1          ;transmit data register empty
+  63+ 0000 ~            DCD    .EQU   2          ;data carrier detect
+  64+ 0000 ~            CTS    .EQU   3          ;clear to send
+  65+ 0000 ~            FE     .EQU   4          ;framing error
+  66+ 0000 ~            OVRN   .EQU   5          ;overrun
+  67+ 0000 ~            PE     .EQU   6          ;parity error
+  68+ 0000 ~            IRQ    .EQU   7          ;interrupt request
   69+ 0000 ~
   70+ 0000 ~            .endif
   71+ 0000              .endif
@@ -157,538 +152,523 @@
   91+ 0000              ; I/O port addresses
   92+ 0000
   93+ 0000              .if TEC_1
-  94+ 0000 ~                    KEYBUF
-  94+ 0000 ~                   .EQU 00H             ;MM74C923N KEYBOARD ENCODER
-  95+ 0000 ~                    SCAN
-  95+ 0000 ~                     .EQU 01H             ;DISPLAY SCAN LATCH
-  96+ 0000 ~                    DISPLY
-  96+ 0000 ~                   .EQU 02H             ;DISPLAY LATCH
-  97+ 0000 ~                    PORT3
-  97+ 0000 ~                    .EQU 03H             ;ST3 (8X8), STROBE (RELAY BOARD) DATLATCH (DAT BOARD)
-  98+ 0000 ~                    PORT4
-  98+ 0000 ~                    .EQU 04H             ;ST4 (8X8), LCD 'E' (DAT BOARD)
-  99+ 0000 ~                    PORT5
-  99+ 0000 ~                    .EQU 05H
- 100+ 0000 ~                    PORT6
- 100+ 0000 ~                    .EQU 06H
- 101+ 0000 ~                    PORT7
- 101+ 0000 ~                    .EQU 07H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
+  94+ 0000 ~            KEYBUF:      .EQU 00H             ;MM74C923N KEYBOARD ENCODER
+  95+ 0000 ~            SCAN:        .EQU 01H             ;DISPLAY SCAN LATCH
+  96+ 0000 ~            DISPLY:      .EQU 02H             ;DISPLAY LATCH
+  97+ 0000 ~            PORT3:       .EQU 03H             ;ST3 (8X8), STROBE (RELAY BOARD) DATLATCH (DAT BOARD)
+  98+ 0000 ~            PORT4:       .EQU 04H             ;ST4 (8X8), LCD 'E' (DAT BOARD)
+  99+ 0000 ~            PORT5:       .EQU 05H
+ 100+ 0000 ~            PORT6:       .EQU 06H
+ 101+ 0000 ~            PORT7:       .EQU 07H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
  102+ 0000              .endif
- 103+ 0000              .if RC2014
- 104+ 0000 ~                    IO0
- 104+ 0000 ~                      .EQU 80H             ;IO PORT 0
- 105+ 0000 ~                    IO1
- 105+ 0000 ~                      .EQU 81H             ;IO PORT 1
- 106+ 0000 ~                    IO2
- 106+ 0000 ~                      .EQU 82H             ;IO PORT 2
- 107+ 0000 ~                    IO3
- 107+ 0000 ~                      .EQU 83H             ;IO PORT 3
- 108+ 0000 ~                    DISPLY
- 108+ 0000 ~                   .EQU 84H             ;DISPLAY LATCH
- 109+ 0000 ~                    SCAN
- 109+ 0000 ~                     .EQU 85H             ;DISPLAY SCAN LATCH
- 110+ 0000 ~                    KEYBUF
- 110+ 0000 ~                   .EQU 86H             ;KEYBOARD BUFFER
- 111+ 0000 ~                    IO7
- 111+ 0000 ~                      .EQU 87H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
- 112+ 0000              .endif
- 113+ 0000
- 114+ 0000              ; ASCII codes
- 115+ 0000              ESC:     .EQU   1BH
- 116+ 0000              CR:      .EQU   0DH
- 117+ 0000              LF:      .EQU   0AH
- 118+ 0000
- 119+ 0000                      PADORG ROMSTART
- 119+ 0000             >    IF $ < ROMSTART
- 119+ 0000 ~           >    BLOCK addr-$
- 119+ 0000             >    ENDIF
- 119+ 0000             >    ORG ROMSTART
- 120+ 0000                      .ORG ROMSTART
- 121+ 0000              ;reset
- 122+ 0000              RSTVEC:
- 123+ 0000 C3 96 00             JP	RESET
- 124+ 0003
- 125+ 0003              rst1:
- 126+ 0003                  	PADORG	ROMSTART+$08
- 126+ 0003             >    IF $ < ROMSTART+$08
- 126+ 0003 00 00 00... >    BLOCK ROMSTART+$08-$
- 126+ 0008             >    ENDIF
- 126+ 0008             >    ORG ROMSTART+$08
- 127+ 0008                  	.ORG	ROMSTART+$08
- 128+ 0008 2E 01            	ld l,1
- 129+ 000A C3 8B 00         	jp ISR
- 130+ 000D
- 131+ 000D              rst2:
- 132+ 000D                      PADORG ROMSTART+$10
- 132+ 000D             >    IF $ < ROMSTART+$10
- 132+ 000D 00 00 00    >    BLOCK ROMSTART+$10-$
- 132+ 0010             >    ENDIF
- 132+ 0010             >    ORG ROMSTART+$10
- 133+ 0010                      .ORG ROMSTART+$10
- 134+ 0010 2E 02            	ld l,2
- 135+ 0012 C3 8B 00         	jp ISR
- 136+ 0015
- 137+ 0015              rst3:
- 138+ 0015                      PADORG ROMSTART+$18
- 138+ 0015             >    IF $ < ROMSTART+$18
- 138+ 0015 00 00 00    >    BLOCK ROMSTART+$18-$
- 138+ 0018             >    ENDIF
- 138+ 0018             >    ORG ROMSTART+$18
- 139+ 0018                      .ORG ROMSTART+$18
- 140+ 0018 2E 03            	ld l,3
- 141+ 001A C3 8B 00         	jp ISR
- 142+ 001D
- 143+ 001D              rst4:
- 144+ 001D                      PADORG ROMSTART+$20
- 144+ 001D             >    IF $ < ROMSTART+$20
- 144+ 001D 00 00 00    >    BLOCK ROMSTART+$20-$
- 144+ 0020             >    ENDIF
- 144+ 0020             >    ORG ROMSTART+$20
- 145+ 0020                      .ORG ROMSTART+$20
- 146+ 0020 2E 04            	ld l,4
- 147+ 0022 C3 8B 00         	jp ISR
- 148+ 0025
- 149+ 0025              rst5:
- 150+ 0025                  	PADORG ROMSTART+$28
- 150+ 0025             >    IF $ < ROMSTART+$28
- 150+ 0025 00 00 00    >    BLOCK ROMSTART+$28-$
- 150+ 0028             >    ENDIF
- 150+ 0028             >    ORG ROMSTART+$28
- 151+ 0028                  	.ORG ROMSTART+$28
- 152+ 0028 2E 05            	ld l,5
- 153+ 002A C3 8B 00         	jp ISR
- 154+ 002D
- 155+ 002D              rst6:
- 156+ 002D                  	PADORG ROMSTART+$30
- 156+ 002D             >    IF $ < ROMSTART+$30
- 156+ 002D 00 00 00    >    BLOCK ROMSTART+$30-$
- 156+ 0030             >    ENDIF
- 156+ 0030             >    ORG ROMSTART+$30
- 157+ 0030                  	.ORG ROMSTART+$30
- 158+ 0030 2E 06            	ld l,6
- 159+ 0032 C3 8B 00         	jp ISR
- 160+ 0035
- 161+ 0035              ;RST 7 Interrupt
- 162+ 0035                  	PADORG	ROMSTART+$38
- 162+ 0035             >    IF $ < ROMSTART+$38
- 162+ 0035 00 00 00    >    BLOCK ROMSTART+$38-$
- 162+ 0038             >    ENDIF
- 162+ 0038             >    ORG ROMSTART+$38
- 163+ 0038                  	.ORG	ROMSTART+$38
- 164+ 0038
- 165+ 0038              .if  BITBANG
- 166+ 0038 ~
- 167+ 0038 ~                	ld l,7
- 168+ 0038 ~                	jp ISR
- 169+ 0038              .else
- 170+ 0038
- 171+ 0038 C9                   ret
- 172+ 0039
- 173+ 0039              .endif
- 174+ 0039
- 175+ 0039                      PADORG  ROMSTART+$40
- 175+ 0039             >    IF $ < ROMSTART+$40
- 175+ 0039 00 00 00... >    BLOCK ROMSTART+$40-$
- 175+ 0040             >    ENDIF
- 175+ 0040             >    ORG ROMSTART+$40
- 176+ 0040                      .ORG    ROMSTART+$40
- 177+ 0040
- 178+ 0040              ;hexadecimal to 7 segment display code table
- 179+ 0040              .if TEC_1
- 180+ 0040 ~
- 181+ 0040 ~            sevensegment:
- 182+ 0040 ~                        .DB 0EBH,28H,0CDH,0ADH ;0,1,2,3
- 183+ 0040 ~                        .DB 2EH,0A7H,0E7H,29H ;4,5,6,7
- 184+ 0040 ~                        .DB 0EFH,2FH,6FH,0E6H ;8,9,A,B
- 185+ 0040 ~                        .DB 0C3H,0ECH,0C7H,47H ;C,D,E,F
- 186+ 0040              .else ;SC
- 187+ 0040
- 188+ 0040              sevensegment:
- 189+ 0040 3F 06 5B 4F              .DB 3FH,06H,5BH,4FH ;0,1,2,3
- 190+ 0044 66 6D 7D 07              .DB 66H,6DH,7DH,07H ;4,5,6,7
- 191+ 0048 7F 6F 77 7C              .DB 7FH,6FH,77H,7CH ;8,9,A,B
- 192+ 004C 39 5E 79 71              .DB 39H,5EH,79H,71H ;C,D,E,F
- 193+ 0050              .endif
- 194+ 0050
+ 103+ 0000
+ 104+ 0000              .if RC2014
+ 105+ 0000 ~            IO0:         .EQU 80H             ;IO PORT 0
+ 106+ 0000 ~            IO1:         .EQU 81H             ;IO PORT 1
+ 107+ 0000 ~            IO2:         .EQU 82H             ;IO PORT 2
+ 108+ 0000 ~            IO3:         .EQU 83H             ;IO PORT 3
+ 109+ 0000 ~            DISPLY:      .EQU 84H             ;DISPLAY LATCH
+ 110+ 0000 ~            SCAN:        .EQU 85H             ;DISPLAY SCAN LATCH
+ 111+ 0000 ~            KEYBUF:      .EQU 86H             ;KEYBOARD BUFFER
+ 112+ 0000 ~            IO7:         .EQU 87H             ;ENABLE/DISABLE SINGLE STEPPER (IF INSTALLED)
+ 113+ 0000              .endif
+ 114+ 0000
+ 115+ 0000              ; ASCII codes
+ 116+ 0000              ESC:     .EQU   1BH
+ 117+ 0000              CR:      .EQU   0DH
+ 118+ 0000              LF:      .EQU   0AH
+ 119+ 0000
+ 120+ 0000                      PADORG ROMSTART
+ 120+ 0000             >    IF $ < ROMSTART
+ 120+ 0000 ~           >    BLOCK addr-$
+ 120+ 0000             >    ENDIF
+ 120+ 0000             >    ORG ROMSTART
+ 121+ 0000                      .ORG ROMSTART
+ 122+ 0000              ;reset
+ 123+ 0000              RSTVEC:
+ 124+ 0000 C3 96 00             JP	RESET
+ 125+ 0003
+ 126+ 0003              rst1:
+ 127+ 0003                  	PADORG	ROMSTART+$08
+ 127+ 0003             >    IF $ < ROMSTART+$08
+ 127+ 0003 00 00 00... >    BLOCK ROMSTART+$08-$
+ 127+ 0008             >    ENDIF
+ 127+ 0008             >    ORG ROMSTART+$08
+ 128+ 0008                  	.ORG	ROMSTART+$08
+ 129+ 0008 2E 01            	ld l,1
+ 130+ 000A C3 8B 00         	jp ISR
+ 131+ 000D
+ 132+ 000D              rst2:
+ 133+ 000D                      PADORG ROMSTART+$10
+ 133+ 000D             >    IF $ < ROMSTART+$10
+ 133+ 000D 00 00 00    >    BLOCK ROMSTART+$10-$
+ 133+ 0010             >    ENDIF
+ 133+ 0010             >    ORG ROMSTART+$10
+ 134+ 0010                      .ORG ROMSTART+$10
+ 135+ 0010 2E 02            	ld l,2
+ 136+ 0012 C3 8B 00         	jp ISR
+ 137+ 0015
+ 138+ 0015              rst3:
+ 139+ 0015                      PADORG ROMSTART+$18
+ 139+ 0015             >    IF $ < ROMSTART+$18
+ 139+ 0015 00 00 00    >    BLOCK ROMSTART+$18-$
+ 139+ 0018             >    ENDIF
+ 139+ 0018             >    ORG ROMSTART+$18
+ 140+ 0018                      .ORG ROMSTART+$18
+ 141+ 0018 2E 03            	ld l,3
+ 142+ 001A C3 8B 00         	jp ISR
+ 143+ 001D
+ 144+ 001D              rst4:
+ 145+ 001D                      PADORG ROMSTART+$20
+ 145+ 001D             >    IF $ < ROMSTART+$20
+ 145+ 001D 00 00 00    >    BLOCK ROMSTART+$20-$
+ 145+ 0020             >    ENDIF
+ 145+ 0020             >    ORG ROMSTART+$20
+ 146+ 0020                      .ORG ROMSTART+$20
+ 147+ 0020 2E 04            	ld l,4
+ 148+ 0022 C3 8B 00         	jp ISR
+ 149+ 0025
+ 150+ 0025              rst5:
+ 151+ 0025                  	PADORG ROMSTART+$28
+ 151+ 0025             >    IF $ < ROMSTART+$28
+ 151+ 0025 00 00 00    >    BLOCK ROMSTART+$28-$
+ 151+ 0028             >    ENDIF
+ 151+ 0028             >    ORG ROMSTART+$28
+ 152+ 0028                  	.ORG ROMSTART+$28
+ 153+ 0028 2E 05            	ld l,5
+ 154+ 002A C3 8B 00         	jp ISR
+ 155+ 002D
+ 156+ 002D              rst6:
+ 157+ 002D                  	PADORG ROMSTART+$30
+ 157+ 002D             >    IF $ < ROMSTART+$30
+ 157+ 002D 00 00 00    >    BLOCK ROMSTART+$30-$
+ 157+ 0030             >    ENDIF
+ 157+ 0030             >    ORG ROMSTART+$30
+ 158+ 0030                  	.ORG ROMSTART+$30
+ 159+ 0030 2E 06            	ld l,6
+ 160+ 0032 C3 8B 00         	jp ISR
+ 161+ 0035
+ 162+ 0035              ;RST 7 Interrupt
+ 163+ 0035                  	PADORG	ROMSTART+$38
+ 163+ 0035             >    IF $ < ROMSTART+$38
+ 163+ 0035 00 00 00    >    BLOCK ROMSTART+$38-$
+ 163+ 0038             >    ENDIF
+ 163+ 0038             >    ORG ROMSTART+$38
+ 164+ 0038                  	.ORG	ROMSTART+$38
+ 165+ 0038
+ 166+ 0038              .if  BITBANG
+ 167+ 0038 ~
+ 168+ 0038 ~                	ld l,7
+ 169+ 0038 ~                	jp ISR
+ 170+ 0038              .else
+ 171+ 0038
+ 172+ 0038 C9                   ret
+ 173+ 0039
+ 174+ 0039              .endif
+ 175+ 0039
+ 176+ 0039                      PADORG  ROMSTART+$40
+ 176+ 0039             >    IF $ < ROMSTART+$40
+ 176+ 0039 00 00 00... >    BLOCK ROMSTART+$40-$
+ 176+ 0040             >    ENDIF
+ 176+ 0040             >    ORG ROMSTART+$40
+ 177+ 0040                      .ORG    ROMSTART+$40
+ 178+ 0040
+ 179+ 0040              ;hexadecimal to 7 segment display code table
+ 180+ 0040              .if TEC_1
+ 181+ 0040 ~
+ 182+ 0040 ~            sevensegment:
+ 183+ 0040 ~                        .DB 0EBH,28H,0CDH,0ADH ;0,1,2,3
+ 184+ 0040 ~                        .DB 2EH,0A7H,0E7H,29H ;4,5,6,7
+ 185+ 0040 ~                        .DB 0EFH,2FH,6FH,0E6H ;8,9,A,B
+ 186+ 0040 ~                        .DB 0C3H,0ECH,0C7H,47H ;C,D,E,F
+ 187+ 0040              .else ;SC
+ 188+ 0040
+ 189+ 0040              sevensegment:
+ 190+ 0040 3F 06 5B 4F              .DB 3FH,06H,5BH,4FH ;0,1,2,3
+ 191+ 0044 66 6D 7D 07              .DB 66H,6DH,7DH,07H ;4,5,6,7
+ 192+ 0048 7F 6F 77 7C              .DB 7FH,6FH,77H,7CH ;8,9,A,B
+ 193+ 004C 39 5E 79 71              .DB 39H,5EH,79H,71H ;C,D,E,F
+ 194+ 0050              .endif
  195+ 0050
- 196+ 0050              ;---------------
- 197+ 0050              ; BIT TIME DELAY
- 198+ 0050              ;---------------
- 199+ 0050              ;DELAY FOR ONE SERIAL BIT TIME
- 200+ 0050              ;ENTRY : HL = DELAY TIME
- 201+ 0050              ; NO REGISTERS MODIFIED
- 202+ 0050              ;
- 203+ 0050              PWRUP:
- 204+ 0050 21 00 20             LD    hl,$2000
- 205+ 0053              BITIME:
- 206+ 0053 E5                   PUSH  HL
- 207+ 0054 D5                   PUSH  DE
- 208+ 0055 11 01 00             LD    DE,0001H
- 209+ 0058              BITIM1:
- 210+ 0058 ED 52                SBC   HL,DE
- 211+ 005A D2 58 00             JP    NC,BITIM1
- 212+ 005D D1                   POP   DE
- 213+ 005E E1                   POP   HL
- 214+ 005F              IntRet:
- 215+ 005F C9                   RET
- 216+ 0060
- 217+ 0060              ;RST 8  Non Maskable Interrupt
- 218+ 0060                      PADORG ROMSTART+$66
- 218+ 0060             >    IF $ < ROMSTART+$66
- 218+ 0060 00 00 00... >    BLOCK ROMSTART+$66-$
- 218+ 0066             >    ENDIF
- 218+ 0066             >    ORG ROMSTART+$66
- 219+ 0066                      .ORG   ROMSTART+$66
- 220+ 0066                      ; PUSH	HL
- 221+ 0066                      ; LD	HL,(NMIVEC)
- 222+ 0066                      ; JP	(HL)
- 223+ 0066
- 224+ 0066 2E 08            	ld l,8
- 225+ 0068 C3 8B 00         	jp ISR
- 226+ 006B
- 227+ 006B              .if  TEC_1
- 228+ 006B ~            .if  BITBANG
- 229+ 006B ~
- 230+ 006B ~            ;------------------------
- 231+ 006B ~            ; SERIAL TRANSMIT ROUTINE
- 232+ 006B ~            ;------------------------
- 233+ 006B ~            ;TRANSMIT BYTE SERIALLY ON DOUT
- 234+ 006B ~            ;
- 235+ 006B ~            ; ENTRY : A = BYTE TO TRANSMIT
- 236+ 006B ~            ;  EXIT : NO REGISTERS MODIFIED
- 237+ 006B ~            ;
- 238+ 006B ~
- 239+ 006B ~            TxChar:
- 240+ 006B ~            TXDATA:
- 241+ 006B ~                	PUSH	AF
- 242+ 006B ~                	PUSH	BC
- 243+ 006B ~                	PUSH	HL
- 244+ 006B ~                	LD	HL,(BAUD)
- 245+ 006B ~                	LD	C,A
- 246+ 006B ~            ;
- 247+ 006B ~            ; TRANSMIT START BIT
- 248+ 006B ~            ;
- 249+ 006B ~            	XOR	A
- 250+ 006B ~            	OUT	(SCAN),A
- 251+ 006B ~            	CALL	BITIME
- 252+ 006B ~            ;
- 253+ 006B ~            ; TRANSMIT DATA
- 254+ 006B ~            ;
- 255+ 006B ~            	LD	B,08H
- 256+ 006B ~            	RRC	C
- 257+ 006B ~            NXTBIT:
- 258+ 006B ~                RRC	C	;SHIFT BITS TO D6,
- 259+ 006B ~            	LD	A,C	;LSB FIRST AND OUTPUT
- 260+ 006B ~            	AND	40H	;THEM FOR ONE BIT TIME.
- 261+ 006B ~            	OUT	(SCAN),A
- 262+ 006B ~            	CALL	BITIME
- 263+ 006B ~            	DJNZ	NXTBIT
- 264+ 006B ~            ;
- 265+ 006B ~            ; SEND STOP BITS
- 266+ 006B ~            ;
- 267+ 006B ~                LD	A,40H
- 268+ 006B ~                OUT	(SCAN),A
- 269+ 006B ~                CALL  BITIME
- 270+ 006B ~                CALL	BITIME
- 271+ 006B ~            	POP	HL
- 272+ 006B ~            	POP	BC
- 273+ 006B ~            	POP	AF
- 274+ 006B ~            	RET
- 275+ 006B ~            ;-----------------------
- 276+ 006B ~            ; SERIAL RECEIVE ROUTINE
- 277+ 006B ~            ;-----------------------
- 278+ 006B ~            ;RECEIVE SERIAL BYTE FROM DIN
- 279+ 006B ~            ;
- 280+ 006B ~            ; ENTRY : NONE
- 281+ 006B ~            ;  EXIT : A= RECEIVED BYTE IF CARRY CLEAR
- 282+ 006B ~            ;
- 283+ 006B ~            ; REGISTERS MODIFIED A AND F
- 284+ 006B ~            ;
- 285+ 006B ~            RxChar:
- 286+ 006B ~            RXDATA:
- 287+ 006B ~            	PUSH	BC
- 288+ 006B ~            	PUSH	HL
- 289+ 006B ~            ;
- 290+ 006B ~            ; WAIT FOR START BIT
- 291+ 006B ~            ;
- 292+ 006B ~            RXDAT1: IN	A,(KEYBUF)
- 293+ 006B ~            	    BIT	7,A
- 294+ 006B ~            	    JR	NZ,RXDAT1	;NO START BIT
- 295+ 006B ~            ;
- 296+ 006B ~            ; DETECTED START BIT
- 297+ 006B ~            ;
- 298+ 006B ~            	LD	HL,(BAUD)
- 299+ 006B ~            	SRL	H
- 300+ 006B ~            	RR	L 	;DELAY FOR HALF BIT TIME
- 301+ 006B ~            	CALL 	BITIME
- 302+ 006B ~            	IN	A,(KEYBUF)
- 303+ 006B ~            	BIT	7,A
- 304+ 006B ~            	JR	NZ,RXDAT1	;START BIT NOT VALID
- 305+ 006B ~            ;
- 306+ 006B ~            ; DETECTED VALID START BIT,READ IN DATA
- 307+ 006B ~            ;
- 308+ 006B ~            	LD	B,08H
- 309+ 006B ~            RXDAT2:
- 310+ 006B ~                LD	HL,(BAUD)
- 311+ 006B ~            	CALL	BITIME	;DELAY ONE BIT TIME
- 312+ 006B ~            	IN	A,(KEYBUF)
- 313+ 006B ~            	RL	A
- 314+ 006B ~            	RR	C	;SHIFT BIT INTO DATA REG
- 315+ 006B ~            	DJNZ	RXDAT2
- 316+ 006B ~            	LD	A,C
- 317+ 006B ~            	OR	A	;CLEAR CARRY FLAG
- 318+ 006B ~                POP	HL
- 319+ 006B ~                POP	BC
- 320+ 006B ~            	RET
- 321+ 006B ~
- 322+ 006B ~            .else ;6850
- 323+ 006B ~            ;
- 324+ 006B ~            ; transmit a character in a
- 325+ 006B ~            ;--------------------------
- 326+ 006B ~            TXDATA:
- 327+ 006B ~            TxChar:
- 328+ 006B ~                    push  bc
- 329+ 006B ~                    ld    b,a                   ;save the character  for later
- 330+ 006B ~            TxChar1:
- 331+ 006B ~                    in    a,(STATUS)            ;get the ACIA status
- 332+ 006B ~                    bit   1,a
- 333+ 006B ~            ;        bit   TDRE,a                ;is the TDRE bit high?
- 334+ 006B ~                    jr    z,TxChar1             ;no, the TDR is not empty
- 335+ 006B ~                    ld    a,b                   ;yes, get the character
- 336+ 006B ~                    out   (TDR),a               ;and put it in the TDR
- 337+ 006B ~                    pop   bc
- 338+ 006B ~                    ret
- 339+ 006B ~            ;
- 340+ 006B ~            ; receive  a character in a
- 341+ 006B ~            ;---------------------------------
- 342+ 006B ~            RXDATA:
- 343+ 006B ~            RxChar:
- 344+ 006B ~                    in    a,(STATUS)         ;get the ACIA status
- 345+ 006B ~                    bit   0,a
- 346+ 006B ~            ;        bit   RDRF,a             ;is the RDRF bit high?
- 347+ 006B ~                    jr    z,RxChar           ;no, the RDR is empty
- 348+ 006B ~                    in    a,(RDR)            ;yes, read the received char
- 349+ 006B ~                    ret
- 350+ 006B ~            .endif
- 351+ 006B              .endif
- 352+ 006B
- 353+ 006B              .if BEANZEE
- 354+ 006B              ;
- 355+ 006B              ; transmit a character in a
- 356+ 006B              ;--------------------------
- 357+ 006B              TXDATA:
- 358+ 006B              TxChar:
- 359+ 006B C5                   push  bc
- 360+ 006C 47                   ld    b,a                   ;save the character  for later
- 361+ 006D              TxChar1:
- 362+ 006D DB 00                in    a,(USB_STATUS)        ;get the USB status
- 363+ 006F CB 47                bit   0,a                   ;ready to transmit? (active low)
- 364+ 0071 20 FA                jr    nz,TxChar1            ;no, bit is high
- 365+ 0073 78                   ld    a,b                   ;yes, get the character
- 366+ 0074 D3 01                out   (USB_DATA),a          ;and send it
- 367+ 0076 C1                   pop   bc
- 368+ 0077 C9                   ret
- 369+ 0078              ;
- 370+ 0078              ; receive  a character in a
- 371+ 0078              ;---------------------------------
- 372+ 0078              RXDATA:
- 373+ 0078              RxChar:
- 374+ 0078 DB 00                in    a,(USB_STATUS)        ;get the USB status
- 375+ 007A CB 4F                bit   1,a                   ;data to read? (active low)
- 376+ 007C 20 FA                jr    nz,RxChar             ;no, the buffer is empty
- 377+ 007E DB 01                in    a,(USB_DATA)          ;yes, read the received char
- 378+ 0080 C9                   ret
- 379+ 0081
- 380+ 0081              .endif
- 381+ 0081
+ 196+ 0050
+ 197+ 0050              ;---------------
+ 198+ 0050              ; BIT TIME DELAY
+ 199+ 0050              ;---------------
+ 200+ 0050              ;DELAY FOR ONE SERIAL BIT TIME
+ 201+ 0050              ;ENTRY : HL = DELAY TIME
+ 202+ 0050              ; NO REGISTERS MODIFIED
+ 203+ 0050              ;
+ 204+ 0050              PWRUP:
+ 205+ 0050 21 00 20             LD    hl,$2000
+ 206+ 0053              BITIME:
+ 207+ 0053 E5                   PUSH  HL
+ 208+ 0054 D5                   PUSH  DE
+ 209+ 0055 11 01 00             LD    DE,0001H
+ 210+ 0058              BITIM1:
+ 211+ 0058 ED 52                SBC   HL,DE
+ 212+ 005A D2 58 00             JP    NC,BITIM1
+ 213+ 005D D1                   POP   DE
+ 214+ 005E E1                   POP   HL
+ 215+ 005F              IntRet:
+ 216+ 005F C9                   RET
+ 217+ 0060
+ 218+ 0060              ;RST 8  Non Maskable Interrupt
+ 219+ 0060                      PADORG ROMSTART+$66
+ 219+ 0060             >    IF $ < ROMSTART+$66
+ 219+ 0060 00 00 00... >    BLOCK ROMSTART+$66-$
+ 219+ 0066             >    ENDIF
+ 219+ 0066             >    ORG ROMSTART+$66
+ 220+ 0066                      .ORG   ROMSTART+$66
+ 221+ 0066                      ; PUSH	HL
+ 222+ 0066                      ; LD	HL,(NMIVEC)
+ 223+ 0066                      ; JP	(HL)
+ 224+ 0066
+ 225+ 0066 2E 08            	ld l,8
+ 226+ 0068 C3 8B 00         	jp ISR
+ 227+ 006B
+ 228+ 006B              .if  TEC_1
+ 229+ 006B ~            .if  BITBANG
+ 230+ 006B ~
+ 231+ 006B ~            ;------------------------
+ 232+ 006B ~            ; SERIAL TRANSMIT ROUTINE
+ 233+ 006B ~            ;------------------------
+ 234+ 006B ~            ;TRANSMIT BYTE SERIALLY ON DOUT
+ 235+ 006B ~            ;
+ 236+ 006B ~            ; ENTRY : A = BYTE TO TRANSMIT
+ 237+ 006B ~            ;  EXIT : NO REGISTERS MODIFIED
+ 238+ 006B ~            ;
+ 239+ 006B ~
+ 240+ 006B ~            TxChar:
+ 241+ 006B ~            TXDATA:
+ 242+ 006B ~                	PUSH	AF
+ 243+ 006B ~                	PUSH	BC
+ 244+ 006B ~                	PUSH	HL
+ 245+ 006B ~                	LD	HL,(BAUD)
+ 246+ 006B ~                	LD	C,A
+ 247+ 006B ~            ;
+ 248+ 006B ~            ; TRANSMIT START BIT
+ 249+ 006B ~            ;
+ 250+ 006B ~            	XOR	A
+ 251+ 006B ~            	OUT	(SCAN),A
+ 252+ 006B ~            	CALL	BITIME
+ 253+ 006B ~            ;
+ 254+ 006B ~            ; TRANSMIT DATA
+ 255+ 006B ~            ;
+ 256+ 006B ~            	LD	B,08H
+ 257+ 006B ~            	RRC	C
+ 258+ 006B ~            NXTBIT:
+ 259+ 006B ~                    RRC	C	;SHIFT BITS TO D6,
+ 260+ 006B ~            	LD	A,C	;LSB FIRST AND OUTPUT
+ 261+ 006B ~            	AND	40H	;THEM FOR ONE BIT TIME.
+ 262+ 006B ~            	OUT	(SCAN),A
+ 263+ 006B ~            	CALL	BITIME
+ 264+ 006B ~            	DJNZ	NXTBIT
+ 265+ 006B ~            ;
+ 266+ 006B ~            ; SEND STOP BITS
+ 267+ 006B ~            ;
+ 268+ 006B ~                    LD	A,40H
+ 269+ 006B ~                    OUT	(SCAN),A
+ 270+ 006B ~                    CALL    BITIME
+ 271+ 006B ~                    CALL	BITIME
+ 272+ 006B ~            	POP	HL
+ 273+ 006B ~            	POP	BC
+ 274+ 006B ~            	POP	AF
+ 275+ 006B ~            	RET
+ 276+ 006B ~            ;-----------------------
+ 277+ 006B ~            ; SERIAL RECEIVE ROUTINE
+ 278+ 006B ~            ;-----------------------
+ 279+ 006B ~            ;RECEIVE SERIAL BYTE FROM DIN
+ 280+ 006B ~            ;
+ 281+ 006B ~            ; ENTRY : NONE
+ 282+ 006B ~            ;  EXIT : A= RECEIVED BYTE IF CARRY CLEAR
+ 283+ 006B ~            ;
+ 284+ 006B ~            ; REGISTERS MODIFIED A AND F
+ 285+ 006B ~            ;
+ 286+ 006B ~            RxChar:
+ 287+ 006B ~            RXDATA:
+ 288+ 006B ~            	PUSH	BC
+ 289+ 006B ~            	PUSH	HL
+ 290+ 006B ~            ;
+ 291+ 006B ~            ; WAIT FOR START BIT
+ 292+ 006B ~            ;
+ 293+ 006B ~            RXDAT1: IN	A,(KEYBUF)
+ 294+ 006B ~            	BIT	7,A
+ 295+ 006B ~            	JR	NZ,RXDAT1	;NO START BIT
+ 296+ 006B ~            ;
+ 297+ 006B ~            ; DETECTED START BIT
+ 298+ 006B ~            ;
+ 299+ 006B ~            	LD	HL,(BAUD)
+ 300+ 006B ~            	SRL	H
+ 301+ 006B ~            	RR	L 	;DELAY FOR HALF BIT TIME
+ 302+ 006B ~            	CALL 	BITIME
+ 303+ 006B ~            	IN	A,(KEYBUF)
+ 304+ 006B ~            	BIT	7,A
+ 305+ 006B ~            	JR	NZ,RXDAT1	;START BIT NOT VALID
+ 306+ 006B ~            ;
+ 307+ 006B ~            ; DETECTED VALID START BIT,READ IN DATA
+ 308+ 006B ~            ;
+ 309+ 006B ~            	LD	B,08H
+ 310+ 006B ~            RXDAT2:
+ 311+ 006B ~                    LD	HL,(BAUD)
+ 312+ 006B ~            	CALL	BITIME	;DELAY ONE BIT TIME
+ 313+ 006B ~            	IN	A,(KEYBUF)
+ 314+ 006B ~            	RL	A
+ 315+ 006B ~            	RR	C	;SHIFT BIT INTO DATA REG
+ 316+ 006B ~            	DJNZ	RXDAT2
+ 317+ 006B ~            	LD	A,C
+ 318+ 006B ~            	OR	A	;CLEAR CARRY FLAG
+ 319+ 006B ~                    POP	HL
+ 320+ 006B ~                    POP	BC
+ 321+ 006B ~            	RET
+ 322+ 006B ~
+ 323+ 006B ~            .else ;6850
+ 324+ 006B ~            ;
+ 325+ 006B ~            ; transmit a character in a
+ 326+ 006B ~            ;--------------------------
+ 327+ 006B ~            TXDATA:
+ 328+ 006B ~            TxChar:
+ 329+ 006B ~                    push  bc
+ 330+ 006B ~                    ld    b,a                   ;save the character  for later
+ 331+ 006B ~            TxChar1:
+ 332+ 006B ~                    in    a,(STATUS)            ;get the ACIA status
+ 333+ 006B ~                    bit   1,a
+ 334+ 006B ~            ;        bit   TDRE,a                ;is the TDRE bit high?
+ 335+ 006B ~                    jr    z,TxChar1             ;no, the TDR is not empty
+ 336+ 006B ~                    ld    a,b                   ;yes, get the character
+ 337+ 006B ~                    out   (TDR),a               ;and put it in the TDR
+ 338+ 006B ~                    pop   bc
+ 339+ 006B ~                    ret
+ 340+ 006B ~            ;
+ 341+ 006B ~            ; receive  a character in a
+ 342+ 006B ~            ;---------------------------------
+ 343+ 006B ~            RXDATA:
+ 344+ 006B ~            RxChar:
+ 345+ 006B ~                    in    a,(STATUS)         ;get the ACIA status
+ 346+ 006B ~                    bit   0,a
+ 347+ 006B ~            ;        bit   RDRF,a             ;is the RDRF bit high?
+ 348+ 006B ~                    jr    z,RxChar           ;no, the RDR is empty
+ 349+ 006B ~                    in    a,(RDR)            ;yes, read the received char
+ 350+ 006B ~                    ret
+ 351+ 006B ~            .endif
+ 352+ 006B              .endif
+ 353+ 006B
+ 354+ 006B              .if BEANZEE
+ 355+ 006B              ;
+ 356+ 006B              ; transmit a character in a
+ 357+ 006B              ;--------------------------
+ 358+ 006B              TXDATA:
+ 359+ 006B              TxChar:
+ 360+ 006B C5                   push  bc
+ 361+ 006C 47                   ld    b,a                   ;save the character  for later
+ 362+ 006D              TxChar1:
+ 363+ 006D DB 00                in    a,(USB_STATUS)        ;get the USB status
+ 364+ 006F CB 47                bit   0,a                   ;ready to transmit? (active low)
+ 365+ 0071 20 FA                jr    nz,TxChar1            ;no, bit is high
+ 366+ 0073 78                   ld    a,b                   ;yes, get the character
+ 367+ 0074 D3 01                out   (USB_DATA),a          ;and send it
+ 368+ 0076 C1                   pop   bc
+ 369+ 0077 C9                   ret
+ 370+ 0078              ;
+ 371+ 0078              ; receive  a character in a
+ 372+ 0078              ;---------------------------------
+ 373+ 0078              RXDATA:
+ 374+ 0078              RxChar:
+ 375+ 0078 DB 00                in    a,(USB_STATUS)        ;get the USB status
+ 376+ 007A CB 4F                bit   1,a                   ;data to read? (active low)
+ 377+ 007C 20 FA                jr    nz,RxChar             ;no, the buffer is empty
+ 378+ 007E DB 01                in    a,(USB_DATA)          ;yes, read the received char
+ 379+ 0080 C9                   ret
+ 380+ 0081
+ 381+ 0081              .endif
  382+ 0081
- 383+ 0081              .if LOADER
- 384+ 0081 ~                ;   .ORG   ROMSTART + $0700
- 385+ 0081 ~            ;-----------------------
- 386+ 0081 ~            ; RECEIVE INTEL HEX FILE
- 387+ 0081 ~            ;-----------------------
- 388+ 0081 ~            INTELH:
- 389+ 0081 ~                LD	IX,BUF
- 390+ 0081 ~            ;
- 391+ 0081 ~            ; WAIT FOR RECORD MARK
- 392+ 0081 ~            ;
- 393+ 0081 ~            INTEL1:
- 394+ 0081 ~                XOR	A
- 395+ 0081 ~            	LD	(IX+3),A	;CLEAR CHECKSUM
- 396+ 0081 ~            	CALL	RXDATA	;WAIT FOR THE RECORD MARK
- 397+ 0081 ~            	CP	':'	;TO BE TRANSMITTED
- 398+ 0081 ~            	JR	NZ,INTEL1	;NOT RECORD MARK
- 399+ 0081 ~            ;
- 400+ 0081 ~            ; GET RECORD LENGTH
- 401+ 0081 ~            ;
- 402+ 0081 ~            	CALL	GETBYT
- 403+ 0081 ~            	LD	(IX+0),A	;NUMBER OF DATA BYTES
- 404+ 0081 ~            ;
- 405+ 0081 ~            ; GET ADDRESS FIELD
- 406+ 0081 ~            ;
- 407+ 0081 ~            	CALL	GETBYT
- 408+ 0081 ~            	LD	(IX+2),A	;LOAD ADDRESS HIGH BYTE
- 409+ 0081 ~            	CALL	GETBYT
- 410+ 0081 ~            	LD	(IX+1),A	;LOAD ADDRESS LOW BYTE
- 411+ 0081 ~            ;
- 412+ 0081 ~            ; GET RECORD TYPE
- 413+ 0081 ~            ;
- 414+ 0081 ~            	CALL	GETBYT
- 415+ 0081 ~            	JR	NZ,INTEL4	;END OF FILE RECORD
- 416+ 0081 ~            ;
- 417+ 0081 ~            ; READ IN THE DATA
- 418+ 0081 ~            ;
- 419+ 0081 ~            	LD	B,(IX+0)	;NUMBER OF DATA BYTES
- 420+ 0081 ~            	LD	H,(IX+2)	;LOAD ADDRESS HIGH BYTE
- 421+ 0081 ~            	LD	L,(IX+1)	;LOAD ADDRESS LOW BYTE
- 422+ 0081 ~
- 423+ 0081 ~            INTEL2:
- 424+ 0081 ~                CALL	GETBYT	;GET DATA BYTE
- 425+ 0081 ~            	LD	(HL),A	;STORE DATA BYTE
- 426+ 0081 ~            	INC	HL
- 427+ 0081 ~            	DJNZ	INTEL2	;LOAD MORE BYTES
- 428+ 0081 ~            ;
- 429+ 0081 ~            ; GET CHECKSUM AND COMPARE
- 430+ 0081 ~            ;
- 431+ 0081 ~            	LD	A,(IX+3)	;CONVERT CHECKSUM TO
- 432+ 0081 ~            	NEG		;TWO'S COMPLEMENT
- 433+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
- 434+ 0081 ~            	CALL	GETBYT
- 435+ 0081 ~            	LD	(IX+3),A	;SAVE RECORD CHECKSUM
- 436+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
- 437+ 0081 ~            	JR	Z,INTEL1	;CHECKSUM OK,NEXT RECORD
- 438+ 0081 ~                RET             ;NZ=CHECKSUM ERROR
- 439+ 0081 ~            ;
- 440+ 0081 ~            ; END OF FILE RECORD
- 441+ 0081 ~            ;
- 442+ 0081 ~            INTEL4:
- 443+ 0081 ~                LD	A,(IX+3)	;CONVERT CHECKSUM TO
- 444+ 0081 ~            	NEG		;TWO'S COMPLEMENT
- 445+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
- 446+ 0081 ~            	CALL	GETBYT
- 447+ 0081 ~            	LD	(IX+3),A	;SAVE EOF CHECKSUM
- 448+ 0081 ~            	CP	(IX+4)	;COMPARE CHECKSUM
- 449+ 0081 ~            	RET  	    ;NZ=CHECKSUM ERROR
- 450+ 0081 ~            ;--------------------------
- 451+ 0081 ~            ; GET BYTE FROM SERIAL PORT
- 452+ 0081 ~            ;--------------------------
- 453+ 0081 ~            GETBYT:
- 454+ 0081 ~                PUSH	BC
- 455+ 0081 ~            	CALL	RXDATA
- 456+ 0081 ~            	BIT	6,A
- 457+ 0081 ~            	JR	Z,GETBT1
- 458+ 0081 ~            	ADD	A,09H
- 459+ 0081 ~            GETBT1:
- 460+ 0081 ~                AND	0FH
- 461+ 0081 ~            	SLA 	A
- 462+ 0081 ~            	SLA	A
+ 383+ 0081
+ 384+ 0081              .if LOADER
+ 385+ 0081 ~                ;   .ORG   ROMSTART + $0700
+ 386+ 0081 ~            ;-----------------------
+ 387+ 0081 ~            ; RECEIVE INTEL HEX FILE
+ 388+ 0081 ~            ;-----------------------
+ 389+ 0081 ~            INTELH:
+ 390+ 0081 ~                LD	IX,BUF
+ 391+ 0081 ~            ;
+ 392+ 0081 ~            ; WAIT FOR RECORD MARK
+ 393+ 0081 ~            ;
+ 394+ 0081 ~            INTEL1:
+ 395+ 0081 ~                    XOR	A
+ 396+ 0081 ~            	LD	(IX+3),A	;CLEAR CHECKSUM
+ 397+ 0081 ~            	CALL	RXDATA	;WAIT FOR THE RECORD MARK
+ 398+ 0081 ~            	CP	':'	;TO BE TRANSMITTED
+ 399+ 0081 ~            	JR	NZ,INTEL1	;NOT RECORD MARK
+ 400+ 0081 ~            ;
+ 401+ 0081 ~            ; GET RECORD LENGTH
+ 402+ 0081 ~            ;
+ 403+ 0081 ~            	CALL	GETBYT
+ 404+ 0081 ~            	LD	(IX+0),A	;NUMBER OF DATA BYTES
+ 405+ 0081 ~            ;
+ 406+ 0081 ~            ; GET ADDRESS FIELD
+ 407+ 0081 ~            ;
+ 408+ 0081 ~            	CALL	GETBYT
+ 409+ 0081 ~            	LD	(IX+2),A	;LOAD ADDRESS HIGH BYTE
+ 410+ 0081 ~            	CALL	GETBYT
+ 411+ 0081 ~            	LD	(IX+1),A	;LOAD ADDRESS LOW BYTE
+ 412+ 0081 ~            ;
+ 413+ 0081 ~            ; GET RECORD TYPE
+ 414+ 0081 ~            ;
+ 415+ 0081 ~            	CALL	GETBYT
+ 416+ 0081 ~            	JR	NZ,INTEL4	;END OF FILE RECORD
+ 417+ 0081 ~            ;
+ 418+ 0081 ~            ; READ IN THE DATA
+ 419+ 0081 ~            ;
+ 420+ 0081 ~            	LD	B,(IX+0)	;NUMBER OF DATA BYTES
+ 421+ 0081 ~            	LD	H,(IX+2)	;LOAD ADDRESS HIGH BYTE
+ 422+ 0081 ~            	LD	L,(IX+1)	;LOAD ADDRESS LOW BYTE
+ 423+ 0081 ~
+ 424+ 0081 ~            INTEL2:
+ 425+ 0081 ~                    CALL	GETBYT	;GET DATA BYTE
+ 426+ 0081 ~            	LD	(HL),A	;STORE DATA BYTE
+ 427+ 0081 ~            	INC	HL
+ 428+ 0081 ~            	DJNZ	INTEL2	;LOAD MORE BYTES
+ 429+ 0081 ~            ;
+ 430+ 0081 ~            ; GET CHECKSUM AND COMPARE
+ 431+ 0081 ~            ;
+ 432+ 0081 ~            	LD	A,(IX+3)	;CONVERT CHECKSUM TO
+ 433+ 0081 ~            	NEG		        ;TWO'S COMPLEMENT
+ 434+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
+ 435+ 0081 ~            	CALL	GETBYT
+ 436+ 0081 ~            	LD	(IX+3),A	;SAVE RECORD CHECKSUM
+ 437+ 0081 ~            	CP	(IX+4)	        ;COMPARE CHECKSUM
+ 438+ 0081 ~            	JR	Z,INTEL1	;CHECKSUM OK,NEXT RECORD
+ 439+ 0081 ~                    RET                     ;NZ=CHECKSUM ERROR
+ 440+ 0081 ~            ;
+ 441+ 0081 ~            ; END OF FILE RECORD
+ 442+ 0081 ~            ;
+ 443+ 0081 ~            INTEL4:
+ 444+ 0081 ~                LD	A,(IX+3)	        ;CONVERT CHECKSUM TO
+ 445+ 0081 ~            	NEG		        ;TWO'S COMPLEMENT
+ 446+ 0081 ~            	LD	(IX+4),A	;SAVE COMPUTED CHECKSUM
+ 447+ 0081 ~            	CALL	GETBYT
+ 448+ 0081 ~            	LD	(IX+3),A	;SAVE EOF CHECKSUM
+ 449+ 0081 ~            	CP	(IX+4)	        ;COMPARE CHECKSUM
+ 450+ 0081 ~            	RET  	                ;NZ=CHECKSUM ERROR
+ 451+ 0081 ~            ;--------------------------
+ 452+ 0081 ~            ; GET BYTE FROM SERIAL PORT
+ 453+ 0081 ~            ;--------------------------
+ 454+ 0081 ~            GETBYT:
+ 455+ 0081 ~                PUSH	BC
+ 456+ 0081 ~            	CALL	RXDATA
+ 457+ 0081 ~            	BIT	6,A
+ 458+ 0081 ~            	JR	Z,GETBT1
+ 459+ 0081 ~            	ADD	A,09H
+ 460+ 0081 ~            GETBT1:
+ 461+ 0081 ~                AND	0FH
+ 462+ 0081 ~            	SLA 	A
  463+ 0081 ~            	SLA	A
  464+ 0081 ~            	SLA	A
- 465+ 0081 ~            	LD	C,A
- 466+ 0081 ~            ;
- 467+ 0081 ~            ; GET LOW NYBBLE
- 468+ 0081 ~            ;
- 469+ 0081 ~            	CALL	RXDATA
- 470+ 0081 ~            	BIT	6,A
- 471+ 0081 ~            	JR	Z,GETBT2
- 472+ 0081 ~            	ADD	A,09H
- 473+ 0081 ~            GETBT2	AND	0FH
- 474+ 0081 ~            	OR	C
- 475+ 0081 ~            	LD	B,A
- 476+ 0081 ~            	ADD	A,(IX+3)
- 477+ 0081 ~            	LD	(IX+3),A	;ADD TO CHECKSUM
- 478+ 0081 ~            	LD	A,B
- 479+ 0081 ~            	AND	A	;CLEAR CARRY
- 480+ 0081 ~                POP	BC
- 481+ 0081 ~            	RET
- 482+ 0081              .endif
- 483+ 0081
- 484+ 0081              ; in this example code just wait for an INTEL Hex file download
- 485+ 0081              ;just going to send a char to let you know I'm here
- 486+ 0081              .if LOADER
- 487+ 0081 ~
- 488+ 0081 ~            Load:
- 489+ 0081 ~                    ld     a,'L'  ; L for load
- 490+ 0081 ~                    call   TxChar
- 491+ 0081 ~                    call INTELH
- 492+ 0081 ~                    jp   z,RAMSTART          ;assume the downloaded code starts here
- 493+ 0081 ~                    ld   a,'0'   ;0 is false
- 494+ 0081 ~                    call TxChar
- 495+ 0081 ~                    jr   load    ;if at first you don't succeed...
- 496+ 0081              .endif
- 497+ 0081
- 498+ 0081              getchar:
- 499+ 0081 2A 18 82             LD HL,(GETCVEC)
- 500+ 0084 E9                   JP (HL)
- 501+ 0085
- 502+ 0085              putchar:
- 503+ 0085 E5                   PUSH HL
- 504+ 0086 2A 1A 82             LD HL,(PUTCVEC)
- 505+ 0089 E3                   EX (SP),HL
- 506+ 008A C9                   RET
- 507+ 008B
- 508+ 008B              ISR:
- 509+ 008B 26 00                ld h,0
- 510+ 008D 22 92 84         	ld (vIntID),hl
- 511+ 0090 CD BD 03         	call enter
- 512+ 0093 5A 00            	db "Z",0
- 513+ 0095 C9               	ret
- 514+ 0096
- 515+ 0096              RESET:
- 516+ 0096 31 00 82             ld SP,stack
- 517+ 0099 21 5F 00             LD HL,IntRet
- 518+ 009C 22 06 82         	LD (RST08),HL
- 519+ 009F 22 08 82         	LD (RST10),HL
- 520+ 00A2 22 0A 82         	LD (RST18),HL
- 521+ 00A5 22 0C 82         	LD (RST20),HL
- 522+ 00A8 22 0E 82         	LD (RST28),HL
- 523+ 00AB 22 10 82         	LD (RST30),HL
- 524+ 00AE 22 14 82             LD (INTVEC),HL
- 525+ 00B1 22 16 82             LD (NMIVEC),HL
- 526+ 00B4
- 527+ 00B4 21 78 00             LD HL,RXDATA
- 528+ 00B7 22 18 82             LD (GETCVEC),HL
- 529+ 00BA 21 6B 00             LD HL,TXDATA
- 530+ 00BD 22 1A 82             LD (PUTCVEC),HL
- 531+ 00C0
- 532+ 00C0              .if TEC_1
- 533+ 00C0 ~            .if BITBANG = 0
- 534+ 00C0 ~
- 535+ 00C0 ~                    ld    a,MRESET
- 536+ 00C0 ~                    out   (CONTROL),a           ;reset the ACIA
- 537+ 00C0 ~
- 538+ 00C0 ~            .endif
- 539+ 00C0              .endif
- 540+ 00C0
- 541+ 00C0 CD 50 00             call PWRUP
- 542+ 00C3 ED 56                IM  1
- 543+ 00C5 FB                   EI
- 544+ 00C6
- 545+ 00C6              .if TEC_1
- 546+ 00C6 ~            .if BITBANG
- 547+ 00C6 ~
- 548+ 00C6 ~            ;inline serial initialisation
- 549+ 00C6 ~                    LD    A,$40
- 550+ 00C6 ~                    LD    C,SCAN
- 551+ 00C6 ~                    OUT   (C),A
- 552+ 00C6 ~                    LD    HL,B4800
- 553+ 00C6 ~                    LD    (BAUD),HL
- 554+ 00C6 ~
- 555+ 00C6 ~            .else ;6850
- 556+ 00C6 ~
- 557+ 00C6 ~                    ld     a,RTSLID+F8N2+DIV_64
- 558+ 00C6 ~                    out   (CONTROL),a           ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
- 559+ 00C6 ~
- 560+ 00C6 ~            .endif
- 561+ 00C6              .endif
- 562+ 00C6
+ 465+ 0081 ~            	SLA	A
+ 466+ 0081 ~            	LD	C,A
+ 467+ 0081 ~            ;
+ 468+ 0081 ~            ; GET LOW NYBBLE
+ 469+ 0081 ~            ;
+ 470+ 0081 ~            	CALL	RXDATA
+ 471+ 0081 ~            	BIT	6,A
+ 472+ 0081 ~            	JR	Z,GETBT2
+ 473+ 0081 ~            	ADD	A,09H
+ 474+ 0081 ~            GETBT2	AND	0FH
+ 475+ 0081 ~            	OR	C
+ 476+ 0081 ~            	LD	B,A
+ 477+ 0081 ~            	ADD	A,(IX+3)
+ 478+ 0081 ~            	LD	(IX+3),A	;ADD TO CHECKSUM
+ 479+ 0081 ~            	LD	A,B
+ 480+ 0081 ~            	AND	A	        ;CLEAR CARRY
+ 481+ 0081 ~                POP	BC
+ 482+ 0081 ~            	RET
+ 483+ 0081              .endif
+ 484+ 0081
+ 485+ 0081              ; in this example code just wait for an INTEL Hex file download
+ 486+ 0081              ;just going to send a char to let you know I'm here
+ 487+ 0081              .if LOADER
+ 488+ 0081 ~
+ 489+ 0081 ~            Load:
+ 490+ 0081 ~                    ld     a,'L'  ; L for load
+ 491+ 0081 ~                    call   TxChar
+ 492+ 0081 ~                    call INTELH
+ 493+ 0081 ~                    jp   z,RAMSTART          ;assume the downloaded code starts here
+ 494+ 0081 ~                    ld   a,'0'   ;0 is false
+ 495+ 0081 ~                    call TxChar
+ 496+ 0081 ~                    jr   Load    ;if at first you don't succeed...
+ 497+ 0081              .endif
+ 498+ 0081
+ 499+ 0081              getchar:
+ 500+ 0081 2A 18 82             LD HL,(GETCVEC)
+ 501+ 0084 E9                   JP (HL)
+ 502+ 0085
+ 503+ 0085              putchar:
+ 504+ 0085 E5                   PUSH HL
+ 505+ 0086 2A 1A 82             LD HL,(PUTCVEC)
+ 506+ 0089 E3                   EX (SP),HL
+ 507+ 008A C9                   RET
+ 508+ 008B
+ 509+ 008B              ISR:
+ 510+ 008B 26 00                ld h,0
+ 511+ 008D 22 92 84         	ld (vIntID),hl
+ 512+ 0090 CD BD 03         	call enter
+ 513+ 0093 5A 00            	db "Z",0
+ 514+ 0095 C9               	ret
+ 515+ 0096
+ 516+ 0096              RESET:
+ 517+ 0096 31 00 82             ld SP,stack
+ 518+ 0099 21 5F 00             LD HL,IntRet
+ 519+ 009C 22 06 82         	LD (RST08),HL
+ 520+ 009F 22 08 82         	LD (RST10),HL
+ 521+ 00A2 22 0A 82         	LD (RST18),HL
+ 522+ 00A5 22 0C 82         	LD (RST20),HL
+ 523+ 00A8 22 0E 82         	LD (RST28),HL
+ 524+ 00AB 22 10 82         	LD (RST30),HL
+ 525+ 00AE 22 14 82             LD (INTVEC),HL
+ 526+ 00B1 22 16 82             LD (NMIVEC),HL
+ 527+ 00B4
+ 528+ 00B4 21 78 00             LD HL,RXDATA
+ 529+ 00B7 22 18 82             LD (GETCVEC),HL
+ 530+ 00BA 21 6B 00             LD HL,TXDATA
+ 531+ 00BD 22 1A 82             LD (PUTCVEC),HL
+ 532+ 00C0
+ 533+ 00C0              .if TEC_1
+ 534+ 00C0 ~            .if BITBANG = 0
+ 535+ 00C0 ~
+ 536+ 00C0 ~                    ld    a,MRESET
+ 537+ 00C0 ~                    out   (CONTROL),a           ;reset the ACIA
+ 538+ 00C0 ~
+ 539+ 00C0 ~            .endif
+ 540+ 00C0              .endif
+ 541+ 00C0
+ 542+ 00C0 CD 50 00             call PWRUP
+ 543+ 00C3 ED 56                IM  1
+ 544+ 00C5 FB                   EI
+ 545+ 00C6
+ 546+ 00C6              .if TEC_1
+ 547+ 00C6 ~            .if BITBANG
+ 548+ 00C6 ~
+ 549+ 00C6 ~            ;inline serial initialisation
+ 550+ 00C6 ~                    LD    A,$40
+ 551+ 00C6 ~                    LD    C,SCAN
+ 552+ 00C6 ~                    OUT   (C),A
+ 553+ 00C6 ~                    LD    HL,B4800
+ 554+ 00C6 ~                    LD    (BAUD),HL
+ 555+ 00C6 ~
+ 556+ 00C6 ~            .else ;6850
+ 557+ 00C6 ~
+ 558+ 00C6 ~                    ld     a,RTSLID+F8N2+DIV_64
+ 559+ 00C6 ~                    out   (CONTROL),a           ;initialise ACIA  8 bit word, No parity 2 stop divide by 64 for 115200 baud
+ 560+ 00C6 ~
+ 561+ 00C6 ~            .endif
+ 562+ 00C6              .endif
  563+ 00C6
  564+ 00C6
+ 565+ 00C6
 # file closed: IOSerial.asm
-  12  00C6
-  13  00C6 C3 18 02         jp   start              ; into #180 of the prog
-  14  00C9
-  15  00C9              .include "MAIN.asm"
+  18  00C6
+  19  00C6 C3 18 02         jp   start              ; into #180 of the prog
+  20  00C9
+  21  00C9              .include "MAIN.asm"
 # file opened: MAIN.asm
    1+ 00C9              ; *************************************************************************
    2+ 00C9              ;
@@ -2041,7 +2021,7 @@
 1312+ 07FE              ; *******************************************************************************
 1313+ 07FE
 # file closed: MAIN.asm
-  16  07FE              .include "ram.asm"
+  22  07FE              .include "ram.asm"
 # file opened: ram.asm
    1+ 07FE              DSIZE       EQU $80
    2+ 07FE              RSIZE       EQU $80
@@ -2119,5 +2099,286 @@
   74+ 84A0              HEAP:
   75+ 84A0
 # file closed: ram.asm
-  17  84A0
+  23  84A0
 # file closed: BeanZee.z80
+
+Value    Label
+------ - -----------------------------------------------------------
+0x8472 X vIntFunc
+0x8212 X BAUD
+0x8200 X tbPtr
+0x0100   TIBSIZE
+0x0080   RSIZE
+0x0080   DSIZE
+0x848A   vRemain
+0x07F7   div10
+0x07ED   EndSDiv
+0x07DC   Loop2
+0x07DB   Loop1
+0x07DF   jumpin
+0x07C8   absbc
+0x078C   arrayEnd1
+0x079D   arrayEnd2
+0x8204   vTemp2
+0x076B   num3
+0x0748   num1
+0x0747   num0
+0x0738 X def3
+0x0737   def2
+0x072D   def1
+0x071F   def0
+0x070D   printDec7
+0x070C   printDec6
+0x06FC   printDec5
+0x06FA   printDec4
+0x06D8   printDec2
+0x06B6   editDef1
+0x06B7   editDef2
+0x06BF   editDef3
+0x0663   go2
+0x0666   go3
+0x0699   editDef
+0x0646   exec1
+0x063E   else1
+0x0623 X depth
+0x0621   while2
+0x0613 X while
+0x0613 X break_
+0x060B X arrSize
+0x05EA X loopEnd3
+0x05DD   loopEnd2
+0x05F9   loopEnd4
+0x05C4 X loopEnd
+0x05AC   loopStart3
+0x05C2   loopStart4
+0x849E   vElse
+0x05A3   loopStart2
+0x0590   loopStart1
+0x8202   vTemp1
+0x058A X loopStart
+0x07F8   divExit
+0x0581   mul2
+0x0574   mul1
+0x0760   num2
+0x0557   hex2
+0x054E   hex1
+0x0547   arrAccess1
+0x0600   page6
+0x835E   altCodes
+0x0528   comment
+0x8468   altVars
+0x051E   loopVar
+0x07B7   div
+0x0531   altCode
+0x0508   altVar
+0x0504   alt1
+0x04F2 X alt
+0x04F2 X alt_
+0x056A   mul
+0x054B   hex
+0x053E   arrAccess
+0x058A   begin
+0x0711   def
+0x076E   arrEnd
+0x05C4   again
+0x04D4 X arrDef
+0x04D1   str2
+0x04C6   str1
+0x04C5 X str
+0x04BC   lt1_
+0x04A4 X sub2
+0x04A2   sub1
+0x048C   shr1
+0x0464   dot2
+0x06C9   printDec
+0x0654   go1
+0x044A X invert
+0x0442   xor1
+0x0435   and2
+0x0434   and1
+0x042B   assign1
+0x041D X assign
+0x041A   var2
+0x849C   vPointer
+0x040C   var1
+0x03E2   true_
+0x03E5   true1
+0x03DD   false_
+0x846A   vByteMode
+0x03D4   resetByteMode
+0x03D5   assignByteMode
+0x03D0   setByteMode
+0x846C   vCarry
+0x03C6   carry
+0x03B8   writeChar
+0x03B7 X rpop2
+0x03A2   rpush
+0x0399   putStr0
+0x039D   putStr
+0x0380   nesting4
+0x0375   nesting3
+0x0373   nesting2
+0x0364   nesting1
+0x0350   printhex3
+0x0347   printhex2
+0x033C   printhex
+0x0330   lookupRef
+0x0332   lookupRef1
+0x8434   defs
+0x0329   lookupRef0
+0x0323   initOps2a
+0x031E   initOps2
+0x030E   initOps1
+0x0305 X initOps
+0x8476   vHeapPtr
+0x073E   num
+0x84A0   HEAP
+0x849A   vLastDef
+0x848C   vStkStart
+0x0034   VARS_SIZE
+0x8400   vars
+0x8180   rStack
+0x02DB   etx1
+0x03AD   rpop
+0x0400   page4
+0x8300   opcodes
+0x02D2   etx
+0x02C8   exit
+0x02B4   NEXT
+0x038B   crlf
+0x0277   macro
+0x0296   waitchar3
+0x02AC   waitchar4
+0x0288   waitchar1
+0x0248   waitchar
+0x035B   nesting
+0x023D   interpret3
+0x0243   interpret4
+0x8000   TIB
+0x847C   vTIBPtr
+0x0382   prompt
+0x022B   interpret
+0x02DE   init
+0x8200   dStack
+0x0392   printStr
+0x0235   interpret2
+0x020A   backSpace
+0x0649   editDef_
+0x0641   exec_
+0x0613   while_
+0x0690   varAccess_
+0x068B   unlimit_
+0x0688   truex_
+0x060B   arrSize_
+0x064E   prompt_
+0x067F   outPort_
+0x067A   newln_
+0x0668   key_
+0x0670   inPort_
+0x0653   go_
+0x0631   falsex_
+0x063B   else_
+0x0623   depth_
+0x0634   printChar_
+0x0609   aNop_
+0x0600   alloc_
+0x01EE X iAltCodes
+0x044A   tilde_
+0x048B   rbrace_
+0x0438   pipe_
+0x0487   lbrace_
+0x0405   var_
+0x04C5   grave_
+0x0401   underscore_
+0x0441   caret_
+0x04E3   rbrack_
+0x0403   bslash_
+0x04D4   lbrack_
+0x0456   call_
+0x0401   at_
+0x04EC   question_
+0x04B6   gt_
+0x04AB   eq_
+0x04BA   lt_
+0x0480   semi_
+0x04E6   colon_
+0x04DD   num_
+0x04F2   slash_
+0x0460   dot_
+0x0496   minus_
+0x046B   comma_
+0x044F   plus_
+0x04F0   star_
+0x04E0   rparen_
+0x04E9   lparen_
+0x0400   quote_
+0x042D   amper_
+0x0479   percent_
+0x0492   dollar_
+0x04EE   hash_
+0x0471   dquote_
+0x041D   bang_
+0x01C4   iOpcodes
+0x01A9   printStack_
+0x0190   list_
+0x0185   edit_
+0x0180   reedit_
+0x0180   macros
+0x005C X BSLASH
+0x0013   CTRL_S
+0x0012   CTRL_R
+0x000C   CTRL_L
+0x0008   CTRL_H
+0x0005   CTRL_E
+0x0003   CTRL_C
+0xFFFFFFFF X UNLIMITED
+0x0000   FALSE
+0xFFFFFFFF   TRUE
+0x0218   start
+0x8216   NMIVEC
+0x8214   INTVEC
+0x8210   RST30
+0x820E   RST28
+0x820C   RST20
+0x820A   RST18
+0x8208   RST10
+0x8206   RST08
+0x8200   stack
+0x03BD   enter
+0x8492   vIntID
+0x821A   PUTCVEC
+0x0085   putchar
+0x8218   GETCVEC
+0x0081   getchar
+0x0078   RxChar
+0x0078   RXDATA
+0x006D   TxChar1
+0x006B X TxChar
+0x006B   TXDATA
+0x005F   IntRet
+0x0058   BITIM1
+0x0053 X BITIME
+0x0050   PWRUP
+0x0040 X sevensegment
+0x002D X rst6
+0x0025 X rst5
+0x001D X rst4
+0x0015 X rst3
+0x000D X rst2
+0x008B   ISR
+0x0003 X rst1
+0x0096   RESET
+0x0000 X RSTVEC
+0x000A X LF
+0x000D X CR
+0x001B X ESC
+0x0001   USB_DATA
+0x0000   USB_STATUS
+0x0000   BITBANG
+0x0000   LOADER
+0x8000   RAMSTART
+0x0000   ROMSTART
+0x0000 X EXTENDED
+0x0001   BEANZEE
+0x0000   RC2014
+0x0000   TEC_1
