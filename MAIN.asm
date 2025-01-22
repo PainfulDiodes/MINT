@@ -259,9 +259,11 @@ NEXT:
 
 exit:
     inc bc			; store offests into a table of bytes, smaller
-    ld de,bc                
+    ld d,b
+    ld e,c                
     call rpop               ; Restore Instruction pointer
-    ld bc,hl
+    ld b,h
+    ld c,l
     EX de,hl
     jp (hl)
 
@@ -278,7 +280,8 @@ init:
     ld IY,NEXT		; IY provides a faster jump to NEXT
 
     ld hl,vars              
-    ld de,hl
+    ld d,h
+    ld e,l
     inc de
     ld (hl),0
     ld bc,VARS_SIZE * 3         ; init vars, defs and altVars
@@ -448,7 +451,8 @@ writeChar:
     jp putchar
 
 enter:                              
-    ld hl,bc
+    ld h,b
+    ld l,c
     call rpush                      ; save Instruction Pointer
     pop bc
     dec bc
@@ -612,7 +616,8 @@ percent_:
 
 semi_:
     call rpop               ; Restore Instruction pointer
-    ld bc,hl                
+    ld b,h                
+    ld c,l                
     jp (iy)             
 
 ;  Left shift { is multiply by 2		
@@ -851,7 +856,8 @@ loopStart2:
     jr nz,loopStart3                
     ld de,1                     ; yes make it 1
 loopStart3:    
-    ld hl,bc
+    ld h,b
+    ld l,c
     call rpush                  ; rpush loop end
     dec bc                      ; IP points to ")"
     ld hl,(vTemp1)              ; restore start
@@ -986,14 +992,16 @@ go1:
     ld a,D                      ; skip if destination address is null
     or E
     jr Z,go3
-    ld hl,bc
+    ld h,b
+    ld l,c
     inc bc                      ; read next char from source
     ld a,(bc)                   ; if ; to tail call optimise
     cp ";"                      ; by jumping to rather than calling destination
     jr Z,go2
     call rpush                  ; save Instruction Pointer
 go2:
-    ld bc,de
+    ld b,d
+    ld c,e
     dec bc
 go3:
     jp (iy)                     
@@ -1176,7 +1184,8 @@ num1:
     cp 10                       ; greater that 9?
     jr nc, num2                 ; not a digit, exit loop
     inc bc                      ; inc IP
-    ld de,hl                    ; multiply hl * 10
+    ld d,h                    ; multiply hl * 10
+    ld e,l                    ; multiply hl * 10
     add hl,hl    
     add hl,hl    
     add hl,de    
@@ -1203,12 +1212,14 @@ arrEnd:
     ld (vTemp1),bc              ; save IP
     call rpop
     ld (vTemp2),hl              ; save old SP
-    ld de,hl                    ; de = hl = old SP
+    ld d,h                    ; de = hl = old SP
+    ld e,l                    ; de = hl = old SP
     or a 
     sbc hl,sp                   ; hl = array count (items on stack)
     srl h                       ; num items = num bytes / 2
     rr l                        
-    ld bc,hl                    ; bc = count
+    ld b,h                    ; bc = count
+    ld c,l                    ; bc = count
     ld hl,(vHeapPtr)            ; hl = array[-4]
     ld (hl),c                   ; write num items in length word
     inc hl
@@ -1247,7 +1258,8 @@ arrayEnd2:
     jp resetByteMode
 
 div:
-    ld hl,bc                    ; hl = IP
+    ld h,b
+    ld l,c                    ; hl = IP
     pop bc                      ; bc = denominator
     ex (sp),hl                  ; save IP, hl = numerator  
     ld a,h
