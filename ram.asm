@@ -3,7 +3,7 @@ RSIZE       EQU $80
 TIBSIZE     EQU $100		; 256 bytes , along line!
 VARS_SIZE   equ 26*2
 
-.ORG RAMSTART
+    .ORG RAMSTART
 
 TIB:        DS TIBSIZE
 
