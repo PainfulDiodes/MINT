@@ -29,13 +29,13 @@ NMIVEC:     DS 2                ;
 GETCVEC:    DS 2                ;   
 PUTCVEC:    DS 2                ;   
 
-            .align $100
+            org $8300 ; .align $100
 opcodes:    
             DS $80-32-1-1
 altCodes:
             DS 26
 
-            .align $100
+            org $8400 ; .align $100
 
 vars:       DS VARS_SIZE
 defs:       DS VARS_SIZE
