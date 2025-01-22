@@ -4,7 +4,7 @@ BEANZEE EQU 1
 
 EXTENDED EQU 0
 
-.if RC2014
+if RC2014
 
 ; Configuration for RC2014
 
@@ -13,9 +13,9 @@ RAMSTART    EQU $8800
 LOADER EQU 0
 BITBANG EQU 0
 
-.endif
+endif
 
-.if TEC_1
+if TEC_1
         
 ; Configuration for TEC-1
 LOADER EQU 0
@@ -32,9 +32,9 @@ RAMSIZE     EQU $0800
 ; ROMSIZE  .equ 8192
 ; RAMSIZE  .equ 8192
 
-.endif
+endif
 
-.if BEANZEE
+if BEANZEE
 
 ; Configuration for BeanZee
 ROMSTART    EQU $0000
@@ -42,4 +42,4 @@ RAMSTART    EQU $8000
 LOADER EQU 0
 BITBANG EQU 0
 
-.endif
+endif
