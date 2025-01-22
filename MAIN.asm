@@ -22,6 +22,8 @@
     CTRL_S      equ 19
 
     BSLASH      equ $5c
+    CAR_RTN     equ $0d ;"\r"
+    NEW_LINE    equ $0a ;"\n"
 
 LITDAT .macro len
     db len
@@ -185,7 +187,7 @@ waitchar:
     jr NC,waitchar1		; if >= space, if below 20 set cary flag
     cp $0                   ; is it end of string? null end of string
     jr Z,waitchar4
-    cp '\r'                 ; carriage return? ascii 13
+    cp CAR_RTN                 ; carriage return? ascii 13
     jr Z,waitchar3		; if anything else its macro/control 
     cp CTRL_H
     jr z,backSpace
@@ -224,9 +226,9 @@ waitchar1:
 waitchar3:
     ld hl,TIB
     add hl,bc
-    ld (hl),"\r"            ; store the crlf in textbuf
+    ld (hl),CAR_RTN            ; store the crlf in textbuf
     inc hl
-    ld (hl),"\n"            
+    ld (hl),NEW_LINE            
     inc hl                  ; ????
     inc bc
     inc bc
@@ -761,7 +763,7 @@ loopVar:
 comment:
     inc bc                      ; point to next char
     ld a,(bc)
-    cp "\r"                     ; terminate at cr 
+    cp CAR_RTN                     ; terminate at cr 
     jr NZ,comment
     dec bc
     jp   (IY) 
