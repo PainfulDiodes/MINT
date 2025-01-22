@@ -22,8 +22,10 @@
     CTRL_S      equ 19
 
     BSLASH      equ $5c
-    CAR_RTN     equ $0d ;"\r"
-    NEW_LINE    equ $0a ;"\n"
+
+    ASCII_CR    equ $0d ; \r
+    ASCII_NL    equ $0a ; \n
+    ASCII_BS    equ $08 ; \b
 
 LITDAT .macro len
     db len
@@ -147,14 +149,14 @@ backSpace:
     jr z, interpret2
     dec bc
     call printStr
-    db "\b \b",0
+    db ASCII_BS," ",ASCII_BS,0
     jr interpret2
     
 start:
     ld SP,DSTACK		; start of MINT
     call init		    ; setups
     call printStr		; prog count to stack, put code line 235 on stack then call print
-    db "MINT2.0\r\n",0
+    db "MINT2.0",ASCII_CR,ASCII_NL,0
 
 interpret:
     call prompt
@@ -187,7 +189,7 @@ waitchar:
     jr NC,waitchar1		; if >= space, if below 20 set cary flag
     cp $0                   ; is it end of string? null end of string
     jr Z,waitchar4
-    cp CAR_RTN                 ; carriage return? ascii 13
+    cp ASCII_CR                 ; carriage return? ascii 13
     jr Z,waitchar3		; if anything else its macro/control 
     cp CTRL_H
     jr z,backSpace
@@ -226,9 +228,9 @@ waitchar1:
 waitchar3:
     ld hl,TIB
     add hl,bc
-    ld (hl),CAR_RTN            ; store the crlf in textbuf
+    ld (hl),ASCII_CR            ; store the crlf in textbuf
     inc hl
-    ld (hl),NEW_LINE            
+    ld (hl),ASCII_NL            
     inc hl                  ; ????
     inc bc
     inc bc
@@ -408,12 +410,12 @@ nesting4:
 
 prompt:                            
     call printStr
-    db "\r\n> ",0
+    db ASCII_CR,ASCII_NL,"> ",0
     ret
 
 crlf:                               
     call printStr
-    db "\r\n",0
+    db ASCII_CR,ASCII_NL,0
     ret
 
 printStr:                           
@@ -763,7 +765,7 @@ loopVar:
 comment:
     inc bc                      ; point to next char
     ld a,(bc)
-    cp CAR_RTN                     ; terminate at cr 
+    cp ASCII_CR                     ; terminate at cr 
     jr NZ,comment
     dec bc
     jp   (IY) 
