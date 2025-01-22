@@ -272,7 +272,7 @@ exit:
     jp (hl)
 
 etx:                                
-    ld hl,DSTACK               ; check if stack pointer is underwater
+    ld hl,$7e00               ; -DSTACK ; check if stack pointer is underwater
     add hl,SP
     jr NC,etx1
     ld SP,DSTACK
